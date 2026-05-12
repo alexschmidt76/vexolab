@@ -1,9 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk"
 import config from "../config/index"
 
-const client = new Anthropic({ apiKey: config.anthropicKey })
-
-export async function runAgent(command: string): Promise<string> {
+// run the ai agent with the user's api key and return the raw response
+export async function runAgent(command: string, apiKey?: string): Promise<string> {
+  const client = new Anthropic({ apiKey: apiKey || config.anthropicKey })
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 1024,

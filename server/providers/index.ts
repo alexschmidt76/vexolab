@@ -3,14 +3,15 @@ import { Provider } from "../../shared/types"
 
 export async function runAgent(
   command: string,
-  provider: Provider = "anthropic"
+  provider: Provider = "anthropic",
+  apiKey?: string
 ): Promise<string> {
   switch (provider) {
     case "anthropic":
-      return anthropicAgent(command)
-    // case "openai": return openaiAgent(command)  // add later
-    // case "gemini": return geminiAgent(command)  // add later
+      return anthropicAgent(command, apiKey)
+    // case "openai": return openaiAgent(command, apiKey)
+    // case "gemini": return geminiAgent(command, apiKey)
     default:
-      return anthropicAgent(command)
+      return anthropicAgent(command, apiKey)
   }
 }
