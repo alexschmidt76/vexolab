@@ -10,7 +10,7 @@ export default {
   jwtSecret: process.env.JWT_SECRET!,
   supabaseUrl: process.env.SUPABASE_URL!,
   supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY!,
-  stripeSecretKey: process.env.STRIPE_SECRET_KEY!,
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY_TEST!,
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
   stripeStarterPriceId: process.env.STRIPE_STARTER_PRICE_ID!,
   stripeProPriceId: process.env.STRIPE_PRO_PRICE_ID!,
