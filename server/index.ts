@@ -58,6 +58,7 @@ app.use("/users", usersRouter)
 app.use("/webhooks", webhooksRouter)
 app.use("/admin", adminRouter)
 
+app.get("/", (_, res) => res.json({ ok: true }))
 app.get("/health", (_, res) => res.json({ status: "ok", app: "OrvitLab", version: config.cliVersion }))
 app.get("/billing/success", (_, res) => res.send("<h2>Upgrade successful! You are now on a paid plan.</h2>"))
 app.get("/billing/cancel", (_, res) => res.send("<h2>Upgrade cancelled.</h2>"))
@@ -72,6 +73,11 @@ try {
   console.error("BullMQ worker failed to start (Redis unavailable?):", err.message)
 }
 
-app.listen(config.port, () => {
+const server = app.listen(config.port, () => {
   console.log(`OrvitLab server running on port ${config.port}`)
+})
+
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received — Railway is stopping this container")
+  server.close(() => process.exit(0))
 })
