@@ -6,10 +6,10 @@
   },
   "steps": {
     "install": {
-      "commands": ["cd server && npm install"]
+      "commands": ["npm --prefix server install"]
     },
     "build": {
-      "commands": ["cd server && npm run build"]
+      "commands": ["npm --prefix server run build"]
     }
   },
   "deploy": {
