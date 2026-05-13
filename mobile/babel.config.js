@@ -2,5 +2,5 @@ module.exports = {
   presets: [
     ["babel-preset-expo", { jsxImportSource: "nativewind" }],
   ],
-  plugins: ["nativewind/babel", "react-native-reanimated/plugin"],
+  plugins: ["react-native-reanimated/plugin"],
 }
