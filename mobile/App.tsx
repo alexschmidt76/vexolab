@@ -5,7 +5,7 @@ import axios from "axios"
 import HomeScreen from "./app/index"
 import SettingsScreen from "./app/settings"
 
-const SERVER_URL = "http://localhost:3000"
+const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL || "http://localhost:3000"
 
 type Tab = "home" | "settings"
 

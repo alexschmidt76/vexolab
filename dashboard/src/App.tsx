@@ -16,11 +16,11 @@ function Login({ onLogin }: { onLogin: (token: string) => void }) {
         <p className="text-brand-muted text-sm mb-6">
           Log in at{" "}
           <a
-            href="http://localhost:3000/auth/github"
+            href={`${import.meta.env.VITE_SERVER_URL || "http://localhost:3000"}/auth/github`}
             target="_blank"
             className="text-brand-accent underline"
           >
-            localhost:3000/auth/github
+            {import.meta.env.VITE_SERVER_URL || "localhost:3000"}/auth/github
           </a>
           , then paste your token below.
         </p>

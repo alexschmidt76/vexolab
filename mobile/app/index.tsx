@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView 
 import axios from "axios"
 import { Job } from "../../shared/types"
 
-const API_URL = "http://localhost:3000"
+const API_URL = process.env.EXPO_PUBLIC_SERVER_URL || "http://localhost:3000"
 
 export default function HomeScreen({ token, user }: { token: string; user: any }) {
   const [command, setCommand] = useState("")
