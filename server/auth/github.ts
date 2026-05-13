@@ -54,8 +54,14 @@ router.get("/github/callback", async (req: Request, res: Response) => {
       expiresIn: "30d",
     })
 
-    // TODO: restore for production — res.redirect(`orvitlab://auth?token=${token}`)
-    res.send(`<pre style="font-size:14px;padding:20px">JWT Token (copy this):\n\n${token}</pre>`)
+    const platform = req.query.platform as string | undefined
+    const dashboardUrl = process.env.DASHBOARD_URL || "https://orvitlab.dev"
+
+    if (platform === "web") {
+      res.redirect(`${dashboardUrl}/login?token=${token}`)
+    } else {
+      res.send(`<pre style="font-size:14px;padding:20px">JWT Token (copy this):\n\n${token}</pre>`)
+    }
   } catch (err: any) {
     res.status(500).json({ error: err.message })
   }

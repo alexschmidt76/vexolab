@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { api } from "../api"
+import { useAuth } from "../lib/AuthContext"
 
 type Job = {
   id: string
@@ -23,7 +24,8 @@ const STATUS_STYLES: Record<string, string> = {
   failed: "bg-red-900 text-red-300",
 }
 
-export default function Dashboard({ token, user }: { token: string; user: any }) {
+export default function Dashboard() {
+  const { token, user } = useAuth()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [command, setCommand] = useState("")
@@ -33,12 +35,12 @@ export default function Dashboard({ token, user }: { token: string; user: any })
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   async function loadJobs() {
-    const r = await api(token).get("/jobs")
+    const r = await api(token!).get("/jobs")
     setJobs(r.data)
   }
 
   useEffect(() => {
-    api(token)
+    api(token!)
       .get("/jobs")
       .then((r) => setJobs(r.data))
       .finally(() => setLoading(false))
@@ -49,7 +51,7 @@ export default function Dashboard({ token, user }: { token: string; user: any })
     const active = jobs.some((j) => j.status === "pending" || j.status === "running")
     if (active && !pollRef.current) {
       pollRef.current = setInterval(() => {
-        api(token).get("/jobs").then((r) => setJobs(r.data))
+        api(token!).get("/jobs").then((r) => setJobs(r.data))
       }, 3000)
     } else if (!active && pollRef.current) {
       clearInterval(pollRef.current)
@@ -65,7 +67,7 @@ export default function Dashboard({ token, user }: { token: string; user: any })
     setSubmitError("")
     setSubmitting(true)
     try {
-      const { data } = await api(token).post("/jobs", { command: command.trim(), repo: repo.trim() })
+      const { data } = await api(token!).post("/jobs", { command: command.trim(), repo: repo.trim() })
       setJobs((prev) => [data, ...prev])
       setCommand("")
       setRepo("")

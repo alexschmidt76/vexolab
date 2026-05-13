@@ -3,8 +3,10 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, Linking, Alert } f
 import * as Notifications from "expo-notifications"
 import axios from "axios"
 import { PROVIDER_MODELS, Provider } from "../../shared/types"
+import { useAuth } from "../lib/AuthContext"
+import ProfileHeader from "../components/ProfileHeader"
 
-const SERVER_URL = "http://localhost:3000"
+const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL || "http://localhost:3000"
 
 type Tier = "starter" | "pro" | "pro_api"
 
@@ -21,179 +23,254 @@ const PROVIDERS: { id: Provider; label: string }[] = [
   { id: "ollama", label: "Ollama (Local)" },
 ]
 
-export default function SettingsScreen({ token, user }: { token: string; user: any }) {
-  const [apiKey, setApiKey] = useState(user.api_key || "")
-  const [provider, setProvider] = useState<Provider>(user.provider || "anthropic")
-  const [model, setModel] = useState<string>(user.model || PROVIDER_MODELS["anthropic"][1].id)
+export default function SettingsScreen() {
+  const { token, user, logout, refreshUser } = useAuth()
+
+  const [anthropicKey, setAnthropicKey] = useState("")
+  const [openaiKey, setOpenaiKey] = useState("")
+  const [geminiKey, setGeminiKey] = useState("")
+  const [spendLimit, setSpendLimit] = useState(user?.spendLimitUsd?.toString() ?? "")
+  const [provider, setProvider] = useState<Provider>(user?.provider ?? "anthropic")
+  const [model, setModel] = useState<string>(user?.model ?? PROVIDER_MODELS["anthropic"][1].id)
   const [saved, setSaved] = useState(false)
 
-  function handleProviderChange(p: Provider) {
-    setProvider(p)
-    const defaultModel = PROVIDER_MODELS[p].find((m) => m.fast)?.id || PROVIDER_MODELS[p][0].id
-    setModel(defaultModel)
-  }
+  useEffect(() => {
+    if (user) {
+      setProvider(user.provider ?? "anthropic")
+      setModel(user.model ?? PROVIDER_MODELS["anthropic"][1].id)
+      setSpendLimit(user.spendLimitUsd?.toString() ?? "")
+    }
+  }, [user])
 
-  // register for push notifications on mount
   useEffect(() => {
     registerPushToken()
   }, [])
 
-  async function registerPushToken() {
-    const { status } = await Notifications.requestPermissionsAsync()
-    if (status !== "granted") return
+  function handleProviderChange(p: Provider) {
+    setProvider(p)
+    const defaultModel = PROVIDER_MODELS[p].find((m) => m.fast)?.id ?? PROVIDER_MODELS[p][0].id
+    setModel(defaultModel)
+  }
 
-    const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync()
-    await axios.post(
-      `${SERVER_URL}/runner/push-token`,
-      { expoPushToken },
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
+  async function registerPushToken() {
+    if (!token) return
+    try {
+      const { status } = await Notifications.requestPermissionsAsync()
+      if (status !== "granted") return
+      const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync()
+      await axios.post(
+        `${SERVER_URL}/runner/push-token`,
+        { expoPushToken },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+    } catch {}
   }
 
   async function saveSettings() {
-    await axios.patch(`${SERVER_URL}/users/me`, {
-      apiKey: apiKey || undefined,
-      provider,
-      model,
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
+    if (!token) return
+    const body: Record<string, any> = { provider, model }
+    if (anthropicKey.trim()) body.apiKey = anthropicKey.trim()
+    if (openaiKey.trim()) body.openaiApiKey = openaiKey.trim()
+    if (geminiKey.trim()) body.geminiApiKey = geminiKey.trim()
+    if (spendLimit.trim()) {
+      const parsed = parseFloat(spendLimit)
+      if (!isNaN(parsed)) body.spendLimitUsd = parsed
+    }
+    await axios.patch(`${SERVER_URL}/users/me`, body, {
+      headers: { Authorization: `Bearer ${token}` },
     })
+    setAnthropicKey("")
+    setOpenaiKey("")
+    setGeminiKey("")
+    await refreshUser()
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
 
   async function upgrade(tier: Tier) {
-    const { data } = await axios.post(`${SERVER_URL}/billing/checkout`, { tier }, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    if (!token) return
+    const { data } = await axios.post(
+      `${SERVER_URL}/billing/checkout`,
+      { tier },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
     Linking.openURL(data.url)
   }
 
   async function getRunnerToken() {
-    const { data } = await axios.post(`${SERVER_URL}/runner/token`, {}, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    if (!token) return
+    const { data } = await axios.post(
+      `${SERVER_URL}/runner/token`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
     Alert.alert(
       "Runner Token",
       `${data.token}\n\nAdd this to your local runner .env as ORVITLAB_TOKEN`
     )
   }
 
+  if (!user) return null
+
   const isCloud = user.tier !== "free"
 
   return (
-    <ScrollView className="flex-1 bg-brand-bg p-6">
-      <Text className="text-brand-text text-2xl font-bold mb-6">Settings</Text>
+    <ScrollView className="flex-1 bg-brand-bg">
+      <ProfileHeader />
 
-      <View className="bg-brand-surface p-4 rounded-xl mb-6 flex-row justify-between items-center">
-        <Text className="text-brand-text font-semibold">{user.github_username}</Text>
-        <View className={`px-3 py-1 rounded-full ${isCloud ? "bg-brand-accent" : "bg-zinc-700"}`}>
-          <Text className="text-white text-xs font-semibold uppercase">{user.tier}</Text>
-        </View>
-      </View>
+      <View className="p-6">
+        <Text className="text-brand-text text-2xl font-bold mb-6">Settings</Text>
 
-      {/* Provider selector */}
-      <Text className="text-brand-muted text-xs mb-2 uppercase tracking-wider">AI Provider</Text>
-      <View className="bg-brand-surface rounded-xl mb-4 overflow-hidden">
-        {PROVIDERS.map((p) => (
-          <TouchableOpacity
-            key={p.id}
-            className={`px-4 py-3 border-b border-zinc-800 flex-row justify-between items-center ${provider === p.id ? "bg-brand-accent/20" : ""}`}
-            onPress={() => handleProviderChange(p.id)}
-          >
-            <Text className={`text-sm ${provider === p.id ? "text-brand-accent font-semibold" : "text-brand-text"}`}>{p.label}</Text>
-            {provider === p.id && <Text className="text-brand-accent text-sm">✓</Text>}
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Model selector */}
-      <Text className="text-brand-muted text-xs mb-2 uppercase tracking-wider">Model</Text>
-      <View className="bg-brand-surface rounded-xl mb-4 overflow-hidden">
-        {PROVIDER_MODELS[provider].map((m) => (
-          <TouchableOpacity
-            key={m.id}
-            className={`px-4 py-3 border-b border-zinc-800 flex-row justify-between items-center ${model === m.id ? "bg-brand-accent/20" : ""}`}
-            onPress={() => setModel(m.id)}
-          >
-            <Text className={`text-sm flex-1 mr-2 ${model === m.id ? "text-brand-accent font-semibold" : "text-brand-text"}`}>{m.label}</Text>
-            {model === m.id && <Text className="text-brand-accent text-sm">✓</Text>}
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* API key — only relevant for pro_api tier with Anthropic */}
-      {user.tier === "pro_api" && provider === "anthropic" && (
-        <>
-          <Text className="text-brand-muted text-xs mb-2 uppercase tracking-wider">
-            Anthropic API Key
-          </Text>
-          <TextInput
-            className="bg-brand-surface text-brand-text p-4 rounded-xl mb-2 text-sm"
-            placeholder="sk-ant-..."
-            placeholderTextColor="#71717a"
-            value={apiKey}
-            onChangeText={setApiKey}
-            secureTextEntry
-          />
-        </>
-      )}
-
-      <TouchableOpacity
-        className="bg-brand-accent p-3 rounded-xl items-center mb-8"
-        onPress={saveSettings}
-      >
-        <Text className="text-white font-semibold">
-          {saved ? "Saved ✓" : "Save Settings"}
-        </Text>
-      </TouchableOpacity>
-
-      <Text className="text-brand-muted text-xs mb-2 uppercase tracking-wider">
-        Agent Runner
-      </Text>
-      {isCloud ? (
-        <View className="bg-brand-surface p-4 rounded-xl mb-6">
-          <Text className="text-brand-accent font-semibold mb-1">Cloud Runner Active</Text>
-          <Text className="text-brand-muted text-sm">Jobs run on OrvitLab servers. Your computer can stay off.</Text>
-        </View>
-      ) : (
-        <View className="bg-brand-surface p-4 rounded-xl mb-6">
-          <Text className="text-brand-text font-semibold mb-1">Local Runner</Text>
-          <Text className="text-brand-muted text-sm mb-3">Jobs run on your machine. Keep the runner app open.</Text>
-          <TouchableOpacity
-            className="bg-zinc-700 p-3 rounded-lg items-center"
-            onPress={getRunnerToken}
-          >
-            <Text className="text-brand-text text-sm font-semibold">Get Runner Token</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* upgrade section — shown only if not on a paid plan */}
-      {user.tier === "free" && (
-        <>
-          <Text className="text-brand-muted text-xs mb-3 uppercase tracking-wider">
-            Upgrade Plan
-          </Text>
-          {UPGRADE_PLANS.map((plan) => (
+        {/* Provider selector */}
+        <Text className="text-brand-muted text-xs mb-2 uppercase tracking-wider">AI Provider</Text>
+        <View className="bg-brand-surface rounded-xl mb-4 overflow-hidden">
+          {PROVIDERS.map((p) => (
             <TouchableOpacity
-              key={plan.tier}
-              className="bg-brand-surface border border-zinc-700 p-4 rounded-xl mb-3"
-              onPress={() => upgrade(plan.tier)}
+              key={p.id}
+              className={`px-4 py-3 border-b border-zinc-800 flex-row justify-between items-center ${provider === p.id ? "bg-indigo-950" : ""}`}
+              onPress={() => handleProviderChange(p.id)}
             >
-              <View className="flex-row justify-between items-center">
-                <View>
-                  <Text className="text-brand-text font-bold">{plan.label}</Text>
-                  <Text className="text-brand-muted text-xs mt-0.5">{plan.limit}</Text>
-                </View>
-                <View className="bg-brand-accent px-3 py-1.5 rounded-lg">
-                  <Text className="text-white text-sm font-semibold">{plan.price}</Text>
-                </View>
-              </View>
+              <Text className={`text-sm ${provider === p.id ? "text-brand-accent font-semibold" : "text-brand-text"}`}>
+                {p.label}
+              </Text>
+              {provider === p.id && <Text className="text-brand-accent text-sm">✓</Text>}
             </TouchableOpacity>
           ))}
-        </>
-      )}
+        </View>
+
+        {/* Model selector */}
+        <Text className="text-brand-muted text-xs mb-2 uppercase tracking-wider">Model</Text>
+        <View className="bg-brand-surface rounded-xl mb-6 overflow-hidden">
+          {PROVIDER_MODELS[provider].map((m) => (
+            <TouchableOpacity
+              key={m.id}
+              className={`px-4 py-3 border-b border-zinc-800 flex-row justify-between items-center ${model === m.id ? "bg-indigo-950" : ""}`}
+              onPress={() => setModel(m.id)}
+            >
+              <Text className={`text-sm flex-1 mr-2 ${model === m.id ? "text-brand-accent font-semibold" : "text-brand-text"}`}>
+                {m.label}
+              </Text>
+              {model === m.id && <Text className="text-brand-accent text-sm">✓</Text>}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* API Keys */}
+        <Text className="text-brand-muted text-xs mb-2 uppercase tracking-wider">API Keys</Text>
+        <View className="bg-brand-surface rounded-xl mb-1 overflow-hidden">
+          <View className="px-4 py-3 border-b border-zinc-800">
+            <Text className="text-brand-muted text-xs mb-1">
+              Anthropic {user.hasAnthropicKey ? "✓ saved" : "not set"}
+            </Text>
+            <TextInput
+              className="text-brand-text text-sm"
+              placeholder="sk-ant-... (leave blank to keep existing)"
+              placeholderTextColor="#71717a"
+              value={anthropicKey}
+              onChangeText={setAnthropicKey}
+              secureTextEntry
+              autoCapitalize="none"
+            />
+          </View>
+          <View className="px-4 py-3 border-b border-zinc-800">
+            <Text className="text-brand-muted text-xs mb-1">
+              OpenAI {user.hasOpenAiKey ? "✓ saved" : "not set"}
+            </Text>
+            <TextInput
+              className="text-brand-text text-sm"
+              placeholder="sk-... (leave blank to keep existing)"
+              placeholderTextColor="#71717a"
+              value={openaiKey}
+              onChangeText={setOpenaiKey}
+              secureTextEntry
+              autoCapitalize="none"
+            />
+          </View>
+          <View className="px-4 py-3">
+            <Text className="text-brand-muted text-xs mb-1">
+              Gemini {user.hasGeminiKey ? "✓ saved" : "not set"}
+            </Text>
+            <TextInput
+              className="text-brand-text text-sm"
+              placeholder="AIza... (leave blank to keep existing)"
+              placeholderTextColor="#71717a"
+              value={geminiKey}
+              onChangeText={setGeminiKey}
+              secureTextEntry
+              autoCapitalize="none"
+            />
+          </View>
+        </View>
+        <Text className="text-brand-muted text-xs mb-6">Keys are stored encrypted. Only last 8 chars shown after saving.</Text>
+
+        {/* Spend limit */}
+        <Text className="text-brand-muted text-xs mb-2 uppercase tracking-wider">Monthly Spend Limit (USD)</Text>
+        <TextInput
+          className="bg-brand-surface text-brand-text p-4 rounded-xl mb-1 text-sm"
+          placeholder="e.g. 20 (no limit if blank)"
+          placeholderTextColor="#71717a"
+          value={spendLimit}
+          onChangeText={setSpendLimit}
+          keyboardType="decimal-pad"
+        />
+        <Text className="text-brand-muted text-xs mb-6">Stops new jobs once your API spend hits this amount.</Text>
+
+        <TouchableOpacity
+          className="bg-brand-accent p-3 rounded-xl items-center mb-8"
+          onPress={saveSettings}
+        >
+          <Text className="text-white font-semibold">{saved ? "Saved ✓" : "Save Settings"}</Text>
+        </TouchableOpacity>
+
+        {/* Runner */}
+        <Text className="text-brand-muted text-xs mb-2 uppercase tracking-wider">Agent Runner</Text>
+        {isCloud ? (
+          <View className="bg-brand-surface p-4 rounded-xl mb-6">
+            <Text className="text-brand-accent font-semibold mb-1">Cloud Runner Active</Text>
+            <Text className="text-brand-muted text-sm">Jobs run on OrvitLab servers. Your computer can stay off.</Text>
+          </View>
+        ) : (
+          <View className="bg-brand-surface p-4 rounded-xl mb-6">
+            <Text className="text-brand-text font-semibold mb-1">Local Runner</Text>
+            <Text className="text-brand-muted text-sm mb-3">Jobs run on your machine. Keep the runner app open.</Text>
+            <TouchableOpacity className="bg-zinc-700 p-3 rounded-lg items-center" onPress={getRunnerToken}>
+              <Text className="text-brand-text text-sm font-semibold">Get Runner Token</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Upgrade plans */}
+        {user.tier === "free" && (
+          <>
+            <Text className="text-brand-muted text-xs mb-3 uppercase tracking-wider">Upgrade Plan</Text>
+            {UPGRADE_PLANS.map((plan) => (
+              <TouchableOpacity
+                key={plan.tier}
+                className="bg-brand-surface border border-zinc-700 p-4 rounded-xl mb-3"
+                onPress={() => upgrade(plan.tier)}
+              >
+                <View className="flex-row justify-between items-center">
+                  <View>
+                    <Text className="text-brand-text font-bold">{plan.label}</Text>
+                    <Text className="text-brand-muted text-xs mt-0.5">{plan.limit}</Text>
+                  </View>
+                  <View className="bg-brand-accent px-3 py-1.5 rounded-lg">
+                    <Text className="text-white text-sm font-semibold">{plan.price}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+
+        {/* Logout */}
+        <TouchableOpacity
+          className="border border-zinc-700 p-3 rounded-xl items-center mt-4 mb-8"
+          onPress={logout}
+        >
+          <Text className="text-brand-muted font-semibold">Sign Out</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   )
 }

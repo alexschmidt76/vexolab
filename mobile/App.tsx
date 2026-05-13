@@ -1,16 +1,17 @@
 import "./global.css"
-import { useState, useEffect } from "react"
-import { View, Text, TouchableOpacity, TextInput, Linking } from "react-native"
+import { View, Text, TouchableOpacity, TextInput, Linking, ActivityIndicator } from "react-native"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
-import axios from "axios"
+import { AuthProvider, useAuth } from "./lib/AuthContext"
 import HomeScreen from "./app/index"
 import SettingsScreen from "./app/settings"
+import { useState } from "react"
 
 const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL || "http://localhost:3000"
 
 type Tab = "home" | "settings"
 
-function LoginScreen({ onLogin }: { onLogin: (t: string) => void }) {
+function LoginScreen() {
+  const { login } = useAuth()
   const [value, setValue] = useState("")
 
   return (
@@ -38,8 +39,8 @@ function LoginScreen({ onLogin }: { onLogin: (t: string) => void }) {
         numberOfLines={3}
       />
       <TouchableOpacity
-        className="w-full bg-brand-accent p-4 rounded-xl items-center disabled:opacity-50"
-        onPress={() => value.trim() && onLogin(value.trim())}
+        className="w-full bg-brand-accent p-4 rounded-xl items-center"
+        onPress={() => value.trim() && login(value.trim())}
       >
         <Text className="text-white font-semibold">Sign In</Text>
       </TouchableOpacity>
@@ -47,67 +48,58 @@ function LoginScreen({ onLogin }: { onLogin: (t: string) => void }) {
   )
 }
 
-export default function App() {
-  const [token, setToken] = useState("")
-  const [user, setUser] = useState<any>(null)
+function AppContent() {
+  const { token, user, loading } = useAuth()
   const [tab, setTab] = useState<Tab>("home")
 
-  useEffect(() => {
-    if (!token) return
-    axios
-      .get(`${SERVER_URL}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((r) => setUser(r.data))
-      .catch(() => {
-        setToken("")
-        setUser(null)
-      })
-  }, [token])
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 bg-brand-bg items-center justify-center">
+        <ActivityIndicator color="#6366f1" />
+      </SafeAreaView>
+    )
+  }
 
   if (!token || !user) {
     return (
-      <SafeAreaProvider>
-        <SafeAreaView className="flex-1 bg-brand-bg">
-          <LoginScreen onLogin={setToken} />
-        </SafeAreaView>
-      </SafeAreaProvider>
+      <SafeAreaView className="flex-1 bg-brand-bg">
+        <LoginScreen />
+      </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView className="flex-1 bg-brand-bg" edges={["top"]}>
-        <View className="flex-1">
-          {tab === "home" ? (
-            <HomeScreen token={token} user={user} />
-          ) : (
-            <SettingsScreen token={token} user={user} />
-          )}
-        </View>
+    <SafeAreaView className="flex-1 bg-brand-bg" edges={["top"]}>
+      <View className="flex-1">
+        {tab === "home" ? <HomeScreen token={token!} user={user} /> : <SettingsScreen />}
+      </View>
 
-        {/* Tab bar */}
-        <View className="bg-brand-surface border-t border-zinc-800 flex-row pb-safe">
-          {(["home", "settings"] as Tab[]).map((t) => (
-            <TouchableOpacity
-              key={t}
-              className="flex-1 py-3 items-center"
-              onPress={() => setTab(t)}
-            >
-              <Text
-                className={`text-xs font-semibold capitalize ${
-                  tab === t ? "text-brand-accent" : "text-brand-muted"
-                }`}
-              >
-                {t}
-              </Text>
-              {tab === t && (
-                <View className="mt-1 w-4 h-0.5 bg-brand-accent rounded-full" />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      </SafeAreaView>
+      <View className="bg-brand-surface border-t border-zinc-800 flex-row pb-safe">
+        {(["home", "settings"] as Tab[]).map((t) => (
+          <TouchableOpacity
+            key={t}
+            className="flex-1 py-3 items-center"
+            onPress={() => setTab(t)}
+          >
+            <Text className={`text-xs font-semibold capitalize ${
+              tab === t ? "text-brand-accent" : "text-brand-muted"
+            }`}>
+              {t}
+            </Text>
+            {tab === t && <View className="mt-1 w-4 h-0.5 bg-brand-accent rounded-full" />}
+          </TouchableOpacity>
+        ))}
+      </View>
+    </SafeAreaView>
+  )
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </SafeAreaProvider>
   )
 }

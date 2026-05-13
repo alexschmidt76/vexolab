@@ -1,4 +1,5 @@
 import { api } from "../api"
+import { useAuth } from "../lib/AuthContext"
 
 type Tier = "starter" | "pro" | "pro_api"
 
@@ -26,9 +27,10 @@ const PLANS: { tier: Tier; name: string; price: string; limit: string; descripti
   },
 ]
 
-export default function Upgrade({ token, user }: { token: string; user: any }) {
+export default function Upgrade() {
+  const { token, user } = useAuth()
   async function checkout(tier: Tier) {
-    const { data } = await api(token).post("/billing/checkout", { tier })
+    const { data } = await api(token!).post("/billing/checkout", { tier })
     window.location.href = data.url
   }
 
