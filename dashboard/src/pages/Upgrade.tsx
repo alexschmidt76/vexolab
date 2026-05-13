@@ -42,7 +42,7 @@ export default function Upgrade() {
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {PLANS.map((plan) => {
-          const isCurrent = user.tier === plan.tier
+          const isCurrent = user?.tier === plan.tier
           return (
             <div
               key={plan.tier}

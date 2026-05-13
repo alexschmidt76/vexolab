@@ -67,6 +67,10 @@ export type User = {
   apiKey: string | null
   openaiApiKey: string | null
   geminiApiKey: string | null
+  spendLimitUsd: number | null
+  hasAnthropicKey: boolean
+  hasOpenAiKey: boolean
+  hasGeminiKey: boolean
   stripeCustomerId: string | null
   expoPushToken: string | null
   jobsThisMonth: number
