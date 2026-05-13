@@ -2,7 +2,7 @@ import Stripe from "stripe"
 import config from "../config/index"
 import { db } from "../db/index"
 
-let _stripe: Stripe | null = null
+let _stripe: InstanceType<typeof Stripe> | null = null
 function getStripe() {
   if (!_stripe) _stripe = new Stripe(config.stripeSecretKey)
   return _stripe
