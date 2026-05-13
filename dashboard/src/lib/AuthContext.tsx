@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
 import { api } from "../api"
+import { User } from "../../../shared/types"
 
 type AuthContextType = {
   token: string | null
-  user: any | null
+  user: User | null
   loading: boolean
   login: (token: string) => Promise<void>
   logout: () => void
@@ -14,7 +15,7 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("orvitlab_token"))
-  const [user, setUser] = useState<any | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

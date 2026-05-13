@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react"
 import { api } from "../api"
 import { useAuth } from "../lib/AuthContext"
 
-type Job = {
+import { Job, JobStatus, RunnerType, User, UserTier } from "../../../shared/types"
+import { useNavigate } from "react-router-dom"
+
+/* type Job = {
   id: string
   command: string
   repo: string
@@ -15,7 +18,7 @@ type Job = {
   provider: string | null
   model: string | null
   created_at: string
-}
+} */
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-900 text-yellow-300",
@@ -30,10 +33,16 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [command, setCommand] = useState("")
   const [repo, setRepo] = useState("")
-  const [runnerType, setRunnerType] = useState("local")
+  const [runnerType, setRunnerType] = useState<RunnerType>("local")
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const navigate = useNavigate()
+
+  function changeRunnerType() {
+    if (runnerType === 'local') setRunnerType('cloud');
+    else setRunnerType("local");
+  }
 
   async function loadJobs() {
     const r = await api(token!).get("/jobs")
@@ -107,17 +116,26 @@ export default function Dashboard() {
                 Runner Type:
               </span>
               <label htmlFor="Toggle3" className="inline-flex items-center p-2 rounded-md cursor-pointer dark:text-gray-100">
-                <input id="Toggle3" type="checkbox" className="hidden peer" onChange={e => setRunnerType(e.target.value)}/>
-                <span className="rounded-l-md bg-brand-accent peer-checked:bg-brand-muted text-white text-sm font-semibold px-5 py-2.5 rounded-lg">Local</span>
+                <input id="Toggle3" type="checkbox" className="hidden peer" onChange={e => changeRunnerType()}/>
+                <span className="rounded-l-md peer-checked:bg-brand-accent bg-brand-muted text-white text-sm font-semibold px-5 py-2.5 rounded-lg">Local</span>
                 <span className="rounded-l-md bg-brand-accent peer-checked:bg-brand-muted text-white text-sm font-semibold px-5 py-2.5 rounded-lg">Annually</span>
               </label>
-              <button
-                className="bg-brand-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-50"
-                onClick={submitJob}
-                disabled={submitting || !command.trim() || !repo.trim()}
-              >
-                {submitting ? "Submitting..." : "Run Agent"}
-              </button>
+              {
+                runnerType === 'cloud' && user && user.tier === "free" ? (
+                  <button
+                    className="bg-brand-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-50"
+                    onClick={() => navigate('/upgrade')}
+                  />
+                ) : (
+                  <button
+                    className="bg-brand-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-50"
+                    onClick={submitJob}
+                    disabled={submitting || !command.trim() || !repo.trim() || !user}
+                  >
+                    {submitting ? "Submitting..." : "Run Agent"}
+                  </button>
+                )
+              }
             </div>
           </div>
           {submitError && <p className="text-red-400 text-xs">{submitError}</p>}
@@ -158,14 +176,14 @@ export default function Dashboard() {
                 </span>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-brand-muted">
-                <span>{new Date(job.created_at).toLocaleString()}</span>
-                <span className="capitalize">{job.runner_type} runner</span>
-                {job.tokens_used != null && <span>{job.tokens_used.toLocaleString()} tokens</span>}
+                <span>{new Date(job.createdAt).toLocaleString()}</span>
+                <span className="capitalize">{job.runnerType} runner</span>
+                {job.tokensUsed != null && <span>{job.tokensUsed.toLocaleString()} tokens</span>}
                 {job.model && <span className="font-mono">{job.model}</span>}
               </div>
-              {job.pr_url && (
+              {job.prUrl && (
                 <a
-                  href={job.pr_url}
+                  href={job.prUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-2 inline-block text-xs text-brand-accent hover:underline"
