@@ -3,13 +3,13 @@
   "provider": "node",
   "steps": {
     "install": {
-      "commands": ["cd server && npm install"]
+      "commands": ["npm install"]
     },
     "build": {
-      "commands": ["cd server && npm run build"]
+      "commands": ["npm run build"]
     }
   },
   "deploy": {
-    "startCommand": "node server/dist/server/index.js"
+    "startCommand": "node dist/server/index.js"
   }
 }
