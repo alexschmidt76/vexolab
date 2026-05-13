@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Linking } from "react-native"
 
-const SERVER_URL = "http://localhost:3000"
+const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL || "http://localhost:3000"
 
 export default function AuthScreen() {
   function loginWithGitHub() {
