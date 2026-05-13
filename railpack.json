@@ -5,11 +5,8 @@
     "node": "lts"
   },
   "steps": {
-    "install": {
-      "commands": ["find /app -maxdepth 3 -name 'package.json' 2>/dev/null; ls /app/; npm --prefix server install"]
-    },
     "build": {
-      "commands": ["npm --prefix server run build"]
+      "commands": ["npm --prefix server install", "npm --prefix server run build"]
     }
   },
   "deploy": {
