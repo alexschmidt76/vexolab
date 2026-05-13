@@ -5,6 +5,9 @@
     "node": "lts"
   },
   "steps": {
+    "checkLevel": {
+      "commands": ["ls"]
+    },
     "install": {
       "commands": ["cd server && npm install"]
     },
