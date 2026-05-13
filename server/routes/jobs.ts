@@ -7,7 +7,7 @@ const router = Router()
 
 // create a new job for the authenticated user
 router.post("/", requireAuth, async (req: Request, res: Response) => {
-  const { command, repo, provider, model } = req.body
+  const { command, repo, provider, model, runnerType } = req.body
   const user = res.locals.user
 
   if (!command || !repo) {
@@ -31,6 +31,7 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
       command,
       repo,
       user.tier,
+      runnerType,
       resolvedProvider,
       resolvedModel,
       apiKey,

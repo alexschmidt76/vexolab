@@ -77,7 +77,7 @@ export default function Dashboard() {
     setSubmitError("")
     setSubmitting(true)
     try {
-      const { data } = await api(token!).post("/jobs", { command: command.trim(), repo: repo.trim() })
+      const { data } = await api(token!).post("/jobs", { command: command.trim(), repo: repo.trim(), runnerType: runnerType })
       setJobs((prev) => [data, ...prev])
       setCommand("")
       setRepo("")

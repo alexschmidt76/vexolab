@@ -26,6 +26,7 @@ export async function addJob(
   command: string,
   repo: string,
   userTier: UserTier,
+  runnerType: RunnerType,
   provider: Provider,
   model: string,
   userApiKey: string | null,
@@ -44,10 +45,6 @@ export async function addJob(
   if ((count ?? 0) >= limit) {
     throw new Error(`Monthly limit of ${limit} jobs reached. Upgrade to continue.`)
   }
-
-  // ollama must always run locally; free tier → local; otherwise cloud
-  const runnerType: RunnerType =
-    provider === "ollama" || userTier === 'free' ? 'local' : 'cloud'
 
   const { data: job } = await db
     .from("jobs")
