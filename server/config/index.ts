@@ -1,6 +1,3 @@
-import dotenv from "dotenv"
-dotenv.config({ path: "../.env" })
-
 export default {
   anthropicKey: process.env.ANTHROPIC_API_KEY!,
   openaiApiKey: process.env.OPENAI_API_KEY || "",
