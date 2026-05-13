@@ -19,6 +19,13 @@ import authRouter from "./auth/github"
 import config from "./config/index"
 import { startWorker } from "./jobs/bullQueue"
 
+console.log("=== SERVER STARTING ===")
+console.log("PORT:", process.env.PORT || "(not set, using 3000)")
+console.log("REDIS_URL:", process.env.REDIS_URL ? "set" : "NOT SET")
+console.log("SUPABASE_URL:", process.env.SUPABASE_URL ? "set" : "NOT SET")
+console.log("JWT_SECRET:", process.env.JWT_SECRET ? "set" : "NOT SET")
+console.log("GITHUB_CLIENT_ID:", process.env.GITHUB_CLIENT_ID ? "set" : "NOT SET")
+
 const app = express()
 
 const ALLOWED_ORIGINS = [
@@ -59,6 +66,7 @@ try {
   const worker = startWorker()
   worker.on("completed", (job) => console.log(`Cloud job ${job.id} completed`))
   worker.on("failed", (job, err) => console.error(`Cloud job ${job?.id} failed:`, err.message))
+  worker.on("error", (err) => console.error("BullMQ worker error:", err.message))
 } catch (err: any) {
   console.error("BullMQ worker failed to start (Redis unavailable?):", err.message)
 }
