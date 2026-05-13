@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [command, setCommand] = useState("")
   const [repo, setRepo] = useState("")
+  const [runnerType, setRunnerType] = useState("local")
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -101,13 +102,23 @@ export default function Dashboard() {
             <span className="text-brand-muted text-xs">
               Using <span className="text-brand-text font-mono">{user?.model || "claude-sonnet-4-6"}</span> via {user?.provider || "anthropic"}
             </span>
-            <button
-              className="bg-brand-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-50"
-              onClick={submitJob}
-              disabled={submitting || !command.trim() || !repo.trim()}
-            >
-              {submitting ? "Submitting..." : "Run Agent"}
-            </button>
+            <div className="flex items-center justify-between">
+              <span className="text-brand-muted">
+                Runner Type:
+              </span>
+              <label htmlFor="Toggle3" className="inline-flex items-center p-2 rounded-md cursor-pointer dark:text-gray-100">
+                <input id="Toggle3" type="checkbox" className="hidden peer" onChange={e => setRunnerType(e.target.value)}/>
+                <span className="rounded-l-md bg-brand-accent peer-checked:bg-brand-muted text-white text-sm font-semibold px-5 py-2.5 rounded-lg">Local</span>
+                <span className="rounded-l-md bg-brand-accent peer-checked:bg-brand-muted text-white text-sm font-semibold px-5 py-2.5 rounded-lg">Annually</span>
+              </label>
+              <button
+                className="bg-brand-accent text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-50"
+                onClick={submitJob}
+                disabled={submitting || !command.trim() || !repo.trim()}
+              >
+                {submitting ? "Submitting..." : "Run Agent"}
+              </button>
+            </div>
           </div>
           {submitError && <p className="text-red-400 text-xs">{submitError}</p>}
         </div>
