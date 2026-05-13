@@ -1,3 +1,12 @@
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err.message, err.stack)
+  process.exit(1)
+})
+process.on("unhandledRejection", (reason) => {
+  console.error("UNHANDLED REJECTION:", reason)
+  process.exit(1)
+})
+
 import express from "express"
 import cors from "cors"
 import jobsRouter from "./routes/jobs"
@@ -27,11 +36,12 @@ app.use(cors({
   credentials: true,
 }))
 
-// raw body for stripe and github webhook signature verification — must come before express.json()
+// raw body for stripe and github webhook signature verification - must come before express.json()
 app.use("/billing/webhook", express.raw({ type: "application/json" }))
 app.use("/webhooks/receive", express.raw({ type: "application/json" }))
 app.use(express.json())
 
+// server routes
 app.use("/auth", authRouter)
 app.use("/jobs", jobsRouter)
 app.use("/billing", billingRouter)
