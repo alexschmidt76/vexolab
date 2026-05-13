@@ -7,14 +7,21 @@ import config from "../config/index"
 const router = Router()
 
 // redirect user to github to authorize the app
-router.get("/github", (_req: Request, res: Response) => {
-  const url = `https://github.com/login/oauth/authorize?client_id=${config.githubClientId}&scope=repo`
+router.get("/github", (req: Request, res: Response) => {
+  const platform = (req.query.platform as string) || ""
+  const state = Buffer.from(JSON.stringify({ platform })).toString("base64url")
+  const url = `https://github.com/login/oauth/authorize?client_id=${config.githubClientId}&scope=repo&state=${state}`
   res.redirect(url)
 })
 
 // github redirects back here with a code after the user authorizes
 router.get("/github/callback", async (req: Request, res: Response) => {
-  const { code } = req.query
+  const { code, state } = req.query
+  let platform = ""
+  try {
+    const decoded = JSON.parse(Buffer.from(state as string, "base64url").toString())
+    platform = decoded.platform || ""
+  } catch {}
 
   try {
     // exchange the code for a github access token
@@ -54,8 +61,7 @@ router.get("/github/callback", async (req: Request, res: Response) => {
       expiresIn: "30d",
     })
 
-    const platform = req.query.platform as string | undefined
-    const dashboardUrl = process.env.DASHBOARD_URL || "https://orvitlab.dev"
+    const dashboardUrl = process.env.DASHBOARD_URL || "https://app.orvitlab.dev"
 
     if (platform === "web") {
       res.redirect(`${dashboardUrl}/login?token=${token}`)
