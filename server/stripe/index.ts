@@ -2,7 +2,11 @@ import Stripe from "stripe"
 import config from "../config/index"
 import { db } from "../db/index"
 
-const stripe = new Stripe(config.stripeSecretKey)
+let _stripe: Stripe | null = null
+function getStripe() {
+  if (!_stripe) _stripe = new Stripe(config.stripeSecretKey)
+  return _stripe
+}
 
 // create a stripe checkout session for the given tier and return the hosted payment url
 export async function createCheckoutSession(
@@ -17,7 +21,7 @@ export async function createCheckoutSession(
       ? config.stripeProPriceId
       : config.stripeProApiPriceId
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${config.serverUrl}/billing/success`,
@@ -33,7 +37,7 @@ export async function handleWebhook(
   payload: Buffer,
   signature: string
 ): Promise<void> {
-  const event = stripe.webhooks.constructEvent(
+  const event = getStripe().webhooks.constructEvent(
     payload,
     signature,
     config.stripeWebhookSecret
