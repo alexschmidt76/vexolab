@@ -6,7 +6,7 @@
   },
   "steps": {
     "install": {
-      "commands": ["pwd && ls -la && npm --prefix server install"]
+      "commands": ["find /app -maxdepth 3 -name 'package.json' 2>/dev/null; ls /app/; npm --prefix server install"]
     },
     "build": {
       "commands": ["npm --prefix server run build"]
