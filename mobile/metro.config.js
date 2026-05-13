@@ -1,7 +1,18 @@
 const { getDefaultConfig } = require("expo/metro-config")
 const { withNativeWind } = require("nativewind/metro")
+const path = require("path")
 
-const config = getDefaultConfig(__dirname)
+const projectRoot = __dirname
+const monorepoRoot = path.resolve(projectRoot, "..")
+
+const config = getDefaultConfig(projectRoot)
+
+// Allow Metro to resolve files outside mobile/ (e.g. shared/)
+config.watchFolders = [monorepoRoot]
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, "node_modules"),
+  path.resolve(monorepoRoot, "node_modules"),
+]
 
 config.transformer.babelTransformerPath = require.resolve("react-native-svg-transformer")
 config.resolver.assetExts = config.resolver.assetExts.filter(ext => ext !== "svg")
