@@ -117,8 +117,8 @@ export default function Dashboard() {
               </span>
               <label htmlFor="Toggle3" className="inline-flex items-center p-2 rounded-md cursor-pointer dark:text-gray-100">
                 <input id="Toggle3" type="checkbox" className="hidden peer" onChange={e => changeRunnerType()}/>
-                <span className="rounded-l-md peer-checked:bg-brand-accent bg-brand-muted text-white text-sm font-semibold px-5 py-2.5 rounded-lg">Local</span>
-                <span className="rounded-l-md bg-brand-accent peer-checked:bg-brand-muted text-white text-sm font-semibold px-5 py-2.5 rounded-lg">Annually</span>
+                <span className="rounded-l-lg bg-brand-accent peer-checked:bg-brand-muted text-white text-sm font-semibold px-5 py-2.5">Local</span>
+                <span className="rounded-r-lg peer-checked:bg-brand-accent bg-brand-muted text-white text-sm font-semibold px-5 py-2.5">Cloud</span>
               </label>
               {
                 runnerType === 'cloud' && user && user.tier === "free" ? (
