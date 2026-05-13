@@ -28,18 +28,20 @@ export default function App() {
           OrvitLab turns your ideas into pull requests. Send a command from your phone
           and let the AI agent create branches, write code, and open PRs on GitHub — automatically.
         </p>
-        <a
-          href="mailto:support@orvitlab.com"
-          className="bg-indigo-500 hover:bg-indigo-600 transition-colors text-white font-semibold px-6 py-3 rounded-xl text-base"
-        >
-          Get Early Access
-        </a>
-        <a
-          href="https://app.orvitlab.com"
-          className="bg-indigo-500 hover:bg-indigo-600 transition-colors text-white font-semibold px-6 py-3 rounded-xl text-base"
-        >
-          Web Dashboard
-        </a>
+        <div className='flex justify-between items-center'>
+          <a
+            href="mailto:support@orvitlab.com"
+            className="bg-indigo-500 hover:bg-indigo-600 transition-colors text-white font-semibold px-6 py-3 rounded-xl text-base"
+          >
+            Get Early Access
+          </a>
+          <a
+            href="https://app.orvitlab.com"
+            className="bg-indigo-500 hover:bg-indigo-600 transition-colors text-white font-semibold px-6 py-3 rounded-xl text-base"
+          >
+            Web Dashboard
+          </a>
+        </div>
       </main>
 
       {/* Features */}
