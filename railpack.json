@@ -5,14 +5,11 @@
     "node": "lts"
   },
   "steps": {
-    "checkLevel": {
-      "commands": ["ls"]
-    },
     "install": {
       "commands": ["cd server && npm install"]
     },
     "build": {
-      "commands": ["cd server && npm run build"]
+      "commands": ["npm run build"]
     }
   },
   "deploy": {
