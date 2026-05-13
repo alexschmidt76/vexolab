@@ -12,10 +12,16 @@ import { startWorker } from "./jobs/bullQueue"
 
 const app = express()
 
-// allow cross-origin requests from any localhost port (dashboard, mobile dev server)
+const ALLOWED_ORIGINS = [
+  /^http:\/\/localhost(:\d+)?$/,
+  /^https?:\/\/orvitlab\.dev$/,
+  /^https?:\/\/.*\.orvitlab\.dev$/,
+]
+
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || origin.startsWith("http://localhost")) return cb(null, true)
+    if (!origin) return cb(null, true)
+    if (ALLOWED_ORIGINS.some((re) => re.test(origin))) return cb(null, true)
     cb(null, false)
   },
   credentials: true,
@@ -39,9 +45,13 @@ app.get("/billing/success", (_, res) => res.send("<h2>Upgrade successful! You ar
 app.get("/billing/cancel", (_, res) => res.send("<h2>Upgrade cancelled.</h2>"))
 
 // start the BullMQ worker for processing cloud jobs
-const worker = startWorker()
-worker.on("completed", (job) => console.log(`Cloud job ${job.id} completed`))
-worker.on("failed", (job, err) => console.error(`Cloud job ${job?.id} failed:`, err.message))
+try {
+  const worker = startWorker()
+  worker.on("completed", (job) => console.log(`Cloud job ${job.id} completed`))
+  worker.on("failed", (job, err) => console.error(`Cloud job ${job?.id} failed:`, err.message))
+} catch (err: any) {
+  console.error("BullMQ worker failed to start (Redis unavailable?):", err.message)
+}
 
 app.listen(config.port, () => {
   console.log(`OrvitLab server running on port ${config.port}`)

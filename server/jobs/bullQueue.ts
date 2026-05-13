@@ -7,7 +7,8 @@ import { notifyUser } from "../notifications/index"
 import { db } from "../db/index"
 import { Provider } from "../../shared/types"
 
-const connection = new IORedis(config.redisUrl, { maxRetriesPerRequest: null })
+const connection = new IORedis(config.redisUrl, { maxRetriesPerRequest: null, lazyConnect: true })
+connection.on("error", (err) => console.error("Redis connection error:", err.message))
 
 export const jobQueue = new Queue("orvitlab-jobs", { connection })
 
