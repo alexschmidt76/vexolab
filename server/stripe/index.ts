@@ -4,17 +4,25 @@ import { db } from "../db/index"
 
 const stripe = new Stripe(config.stripeSecretKey)
 
-// create a stripe checkout session and return the hosted payment url
+// create a stripe checkout session for the given tier and return the hosted payment url
 export async function createCheckoutSession(
   userId: string,
-  userEmail: string
+  userEmail: string,
+  tier: "starter" | "pro" | "pro_api"
 ): Promise<string> {
+  const priceId =
+    tier === "starter"
+      ? config.stripeStarterPriceId
+      : tier === "pro"
+      ? config.stripeProPriceId
+      : config.stripeProApiPriceId
+
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
-    line_items: [{ price: config.stripeProPriceId, quantity: 1 }],
+    line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${config.serverUrl}/billing/success`,
     cancel_url: `${config.serverUrl}/billing/cancel`,
-    metadata: { userId },
+    metadata: { userId, tier },
     customer_email: userEmail,
   })
   return session.url!
@@ -31,18 +39,16 @@ export async function handleWebhook(
     config.stripeWebhookSecret
   )
 
-  // upgrade the user to pro when checkout is completed
+  // upgrade the user to the purchased tier when checkout is completed
   if (event.type === "checkout.session.completed") {
     const session = event.data.object
     const userId = (session as any).metadata?.userId
+    const tier = (session as any).metadata?.tier || "pro"
 
     if (userId) {
       await db
         .from("users")
-        .update({
-          tier: "pro",
-          stripe_customer_id: (session as any).customer,
-        })
+        .update({ tier, stripe_customer_id: (session as any).customer })
         .eq("id", userId)
     }
   }

@@ -1,0 +1,27 @@
+{
+  "name": "orvitlab",
+  "version": "1.0.0",
+  "description": "OrvitLab CLI — run AI dev agent jobs from your terminal",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "bin": {
+    "orvitlab": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "axios": "^1.16.0",
+    "chalk": "^4.1.2",
+    "commander": "^13.1.0",
+    "dotenv": "^17.4.2",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

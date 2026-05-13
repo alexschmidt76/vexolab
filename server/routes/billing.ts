@@ -7,10 +7,17 @@ const router = Router()
 
 router.post("/checkout", requireAuth, async (req: Request, res: Response) => {
   const user = res.locals.user
+  const { tier } = req.body
+
+  if (!["starter", "pro", "pro_api"].includes(tier)) {
+    return res.status(400).json({ error: "Invalid tier. Must be starter, pro, or pro_api." })
+  }
+
   try {
     const url = await createCheckoutSession(
       user.id,
-      `${user.github_username}@users.noreply.github.com`
+      `${user.github_username}@users.noreply.github.com`,
+      tier
     )
     res.json({ url })
   } catch (err: any) {

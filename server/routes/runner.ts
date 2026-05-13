@@ -22,7 +22,7 @@ async function requireRunnerToken(req: Request, res: Response, next: NextFunctio
 }
 
 // generate a new runner token for the user — requires user jwt
-router.post("/token", requireAuth, async (req: Request, res: Response) => {
+router.post("/token", requireAuth, async (_req: Request, res: Response) => {
   const user = res.locals.user
   const token = crypto.randomBytes(32).toString("hex")
 
@@ -31,6 +31,17 @@ router.post("/token", requireAuth, async (req: Request, res: Response) => {
   await db.from("runner_tokens").insert({ user_id: user.id, token })
 
   res.json({ token })
+})
+
+// save the user's expo push token for job notifications — requires user jwt
+router.post("/push-token", requireAuth, async (req: Request, res: Response) => {
+  const user = res.locals.user
+  const { expoPushToken } = req.body
+
+  if (!expoPushToken) return res.status(400).json({ error: "expoPushToken is required" })
+
+  await db.from("users").update({ expo_push_token: expoPushToken }).eq("id", user.id)
+  res.json({ ok: true })
 })
 
 // local runner polls this to get the next pending job

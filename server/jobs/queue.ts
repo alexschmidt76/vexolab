@@ -1,20 +1,54 @@
-import { Job, RunnerType } from "../../shared/types"
-import { runAgent } from "../providers/index"
-import { createBranch, commitFile, openPR } from "../github/client"
+import { Job, RunnerType, UserTier, Provider, JobTrigger } from "../../shared/types"
+import { jobQueue } from "./bullQueue"
 import { db } from "../db/index"
+import config from "../config/index"
 
-// create a new job and route it to the correct runner based on the user's tier
+// monthly prompt limits per tier
+const TIER_LIMITS: Record<string, number> = {
+  free: 15,
+  starter: 100,
+  pro: 500,
+  pro_api: Infinity,
+}
+
+// resolve which api key to use based on provider and whether the user has their own
+function resolveApiKey(provider: Provider, userApiKey: string | null): string {
+  if (provider === "ollama") return ""
+  if (userApiKey) return userApiKey
+  if (provider === "anthropic") return config.anthropicKey
+  if (provider === "openai") return config.openaiApiKey
+  return ""
+}
+
+// create a new job and route it to the correct runner based on provider and tier
 export async function addJob(
   userId: string,
   command: string,
   repo: string,
-  userTier: "free" | "pro",
-  userApiKey: string,
-  userGithubToken: string
+  userTier: UserTier,
+  provider: Provider,
+  model: string,
+  userApiKey: string | null,
+  userGithubToken: string,
+  trigger: JobTrigger = "manual"
 ): Promise<Job> {
-  const runnerType: RunnerType = userTier === "pro" ? "cloud" : "local"
+  // enforce monthly prompt limits
+  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+  const { count } = await db
+    .from("jobs")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("created_at", startOfMonth)
 
-  // insert the job into the database
+  const limit = TIER_LIMITS[userTier] ?? 15
+  if ((count ?? 0) >= limit) {
+    throw new Error(`Monthly limit of ${limit} jobs reached. Upgrade to continue.`)
+  }
+
+  // ollama must always run locally; own api key → local; otherwise cloud
+  const runnerType: RunnerType =
+    provider === "ollama" || !!userApiKey ? "local" : "cloud"
+
   const { data: job } = await db
     .from("jobs")
     .insert({
@@ -23,13 +57,26 @@ export async function addJob(
       repo,
       status: "pending",
       runner_type: runnerType,
+      trigger,
+      provider,
+      model,
     })
     .select()
     .single()
 
-  // pro users run immediately on the cloud, free users wait for the local runner
+  // cloud jobs go into the BullMQ queue; local jobs wait for the runner to poll
   if (runnerType === "cloud") {
-    processCloudJob(job.id, command, repo, userApiKey, userGithubToken)
+    const apiKey = resolveApiKey(provider, userApiKey)
+    await jobQueue.add("process-job", {
+      jobId: job.id,
+      command,
+      repo,
+      apiKey,
+      githubToken: userGithubToken,
+      userId,
+      provider,
+      model,
+    })
   }
 
   return job
@@ -60,45 +107,13 @@ export async function updateJob(id: string, updates: Partial<Job>) {
   await db.from("jobs").update(updates).eq("id", id)
 }
 
-// run a job on the cloud server for pro users
-async function processCloudJob(
-  id: string,
-  command: string,
-  repo: string,
-  apiKey: string,
-  githubToken: string
-) {
-  await updateJob(id, { status: "running" })
-
-  try {
-    // run the ai agent and parse the response
-    const raw = await runAgent(command, "anthropic", apiKey)
-    const clean = raw.replace(/```json|```/g, "").trim()
-    const result = JSON.parse(clean)
-
-    // create the branch and commit each file
-    await createBranch(repo, result.branch, githubToken)
-    for (const file of result.files) {
-      await commitFile(
-        repo,
-        result.branch,
-        file.path,
-        file.content,
-        `OrvitLab: ${result.summary}`,
-        githubToken
-      )
-    }
-
-    // open a pull request and mark the job as done
-    const prUrl = await openPR(
-      repo,
-      result.branch,
-      result.summary,
-      `Created by OrvitLab\n\nCommand: "${command}"`,
-      githubToken
-    )
-    await updateJob(id, { status: "done", branch: result.branch, pr_url: prUrl } as any)
-  } catch (err: any) {
-    await updateJob(id, { status: "failed", error: err.message })
-  }
+// get the most recent 50 jobs for a user
+export async function getUserJobs(userId: string): Promise<Job[]> {
+  const { data } = await db
+    .from("jobs")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(50)
+  return data || []
 }

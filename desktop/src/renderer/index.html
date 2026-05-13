@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OrvitLab Runner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f0f0f; color: #f4f4f5; padding: 20px; user-select: none; }
+    h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { font-size: 12px; color: #71717a; margin-bottom: 20px; }
+    .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #52525b; margin-bottom: 8px; }
+    .mode-btn { display: block; width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 6px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; background: #1a1a1a; color: #f4f4f5; transition: background 0.1s; }
+    .mode-btn:hover:not(:disabled) { background: #242424; }
+    .mode-btn.active { background: #6366f1; border-color: #818cf8; }
+    .mode-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .mode-btn .label { font-weight: 600; font-size: 13px; }
+    .mode-btn .desc { font-size: 11px; color: #a1a1aa; margin-left: 6px; }
+    .mode-btn.active .desc { color: #c7d2fe; }
+    .install-hint { font-size: 11px; color: #52525b; margin-top: 4px; }
+    .install-hint code { color: #818cf8; }
+    .job { background: #1a1a1a; border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; }
+    .job-cmd { font-size: 12px; color: #f4f4f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .job-meta { font-size: 11px; margin-top: 2px; }
+    .status-done { color: #4ade80; }
+    .status-failed { color: #f87171; }
+    .status-running { color: #fbbf24; }
+    .status-pending { color: #71717a; }
+    .divider { height: 1px; background: #27272a; margin: 16px 0; }
+  </style>
+</head>
+<body>
+  <h2>OrvitLab Runner</h2>
+  <p class="subtitle" id="subtitle">Loading...</p>
+
+  <p class="section-label">Runner Mode</p>
+  <button class="mode-btn" id="btn-auto" onclick="setMode('auto')">
+    <span class="label">Auto</span>
+    <span class="desc">Picks best mode per task</span>
+  </button>
+  <button class="mode-btn" id="btn-standard" onclick="setMode('standard')">
+    <span class="label">Standard</span>
+    <span class="desc">Direct API calls, works out of the box</span>
+  </button>
+  <button class="mode-btn" id="btn-claude-cli" onclick="setMode('claude-cli')">
+    <span class="label">Claude CLI</span>
+    <span class="desc" id="claude-desc">Full codebase context</span>
+  </button>
+  <p class="install-hint" id="install-hint" style="display:none">
+    Install Claude Code: <code>npm install -g @anthropic-ai/claude-code</code>
+  </p>
+
+  <div class="divider" id="jobs-divider" style="display:none"></div>
+  <p class="section-label" id="jobs-label" style="display:none">Recent Jobs</p>
+  <div id="jobs"></div>
+
+  <script>
+    const { ipcRenderer } = window.electron
+    let currentMode = 'auto'
+    const recentJobs = []
+
+    function updateUI(status) {
+      currentMode = status.runnerMode
+      document.getElementById('subtitle').textContent =
+        status.isRunning ? '● Running a job...' : '○ Idle — waiting for jobs'
+
+      ;['auto', 'standard', 'claude-cli'].forEach(m => {
+        document.getElementById('btn-' + m).classList.toggle('active', currentMode === m)
+      })
+
+      const cliBt = document.getElementById('btn-claude-cli')
+      cliBt.disabled = !status.claudeCliAvailable
+      document.getElementById('claude-desc').textContent =
+        status.claudeCliAvailable ? 'Full codebase context' : 'Not detected — install Claude Code'
+      document.getElementById('install-hint').style.display =
+        status.claudeCliAvailable ? 'none' : 'block'
+    }
+
+    function renderJobs() {
+      const el = document.getElementById('jobs')
+      const show = recentJobs.length > 0
+      document.getElementById('jobs-divider').style.display = show ? 'block' : 'none'
+      document.getElementById('jobs-label').style.display = show ? 'block' : 'none'
+      el.innerHTML = recentJobs.map(j =>
+        `<div class="job">
+          <div class="job-cmd">${j.command.slice(0, 60)}</div>
+          <div class="job-meta">
+            <span class="status-${j.status}">${j.status}</span>
+            <span style="color:#52525b"> · ${j.runnerMode || 'standard'}</span>
+          </div>
+        </div>`
+      ).join('')
+    }
+
+    function setMode(mode) {
+      ipcRenderer.invoke('set-runner-mode', mode)
+      currentMode = mode
+      ;['auto', 'standard', 'claude-cli'].forEach(m => {
+        document.getElementById('btn-' + m).classList.toggle('active', mode === m)
+      })
+    }
+
+    ipcRenderer.invoke('get-status').then(updateUI)
+
+    ipcRenderer.on('status-update', updateUI)
+
+    ipcRenderer.on('job-started', (data) => {
+      recentJobs.unshift({ ...data.job, runnerMode: data.runnerMode, status: 'running' })
+      if (recentJobs.length > 10) recentJobs.pop()
+      renderJobs()
+    })
+
+    ipcRenderer.on('job-complete', (job) => {
+      const idx = recentJobs.findIndex(j => j.id === job.id)
+      if (idx !== -1) recentJobs[idx] = { ...recentJobs[idx], status: job.status }
+      renderJobs()
+    })
+  </script>
+</body>
+</html>

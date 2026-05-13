@@ -1,0 +1,33 @@
+{
+  "name": "orvitlab-desktop",
+  "version": "1.0.0",
+  "description": "OrvitLab desktop runner app",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc && electron dist/main.js",
+    "pack": "tsc && electron-builder --dir",
+    "dist": "tsc && electron-builder"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.1",
+    "@octokit/rest": "^22.0.1",
+    "axios": "^1.16.0",
+    "electron-updater": "^6.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.0",
+    "electron": "^36.0.0",
+    "electron-builder": "^26.0.0",
+    "typescript": "^5.8.3"
+  },
+  "build": {
+    "appId": "com.orvitlab.desktop",
+    "productName": "OrvitLab",
+    "files": ["dist/**/*", "src/renderer/**/*"],
+    "mac": { "category": "public.app-category.developer-tools" },
+    "win": { "target": "nsis" },
+    "linux": { "target": "AppImage" },
+    "publish": { "provider": "github", "owner": "your-github-username", "repo": "orvitlab" }
+  }
+}

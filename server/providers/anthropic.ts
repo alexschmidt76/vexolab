@@ -1,11 +1,17 @@
 import Anthropic from "@anthropic-ai/sdk"
 import config from "../config/index"
 
-// run the ai agent with the user's api key and return the raw response
-export async function runAgent(command: string, apiKey?: string): Promise<string> {
+export type AgentResult = { text: string; tokensUsed: number }
+
+// run the ai agent with the given api key and model, return response with token count
+export async function runAgent(
+  command: string,
+  apiKey?: string,
+  model: string = "claude-sonnet-4-6"
+): Promise<AgentResult> {
   const client = new Anthropic({ apiKey: apiKey || config.anthropicKey })
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model,
     max_tokens: 1024,
     system: `You are an AI developer agent. When given a command:
 1. Describe what files to create or modify
@@ -23,5 +29,7 @@ Respond ONLY in this exact JSON format with no extra text:
     messages: [{ role: "user", content: command }],
   })
 
-  return response.content[0].type === "text" ? response.content[0].text : ""
+  const text = response.content[0].type === "text" ? response.content[0].text : ""
+  const tokensUsed = response.usage.input_tokens + response.usage.output_tokens
+  return { text, tokensUsed }
 }

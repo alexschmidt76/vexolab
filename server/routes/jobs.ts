@@ -1,34 +1,52 @@
 import { Router, Request, Response } from "express"
 import { requireAuth } from "../auth/middleware"
-import { addJob, getJob } from "../jobs/queue"
+import { addJob, getJob, getUserJobs } from "../jobs/queue"
+import { Provider, PROVIDER_MODELS } from "../../shared/types"
 
 const router = Router()
 
 // create a new job for the authenticated user
 router.post("/", requireAuth, async (req: Request, res: Response) => {
-  const { command, repo } = req.body
+  const { command, repo, provider, model } = req.body
   const user = res.locals.user
 
   if (!command || !repo) {
     return res.status(400).json({ error: "command and repo are required" })
   }
 
-  // require the user to have saved their api key before running a job
-  if (!user.api_key) {
-    return res.status(400).json({ error: "API key not configured. Add it in settings." })
+  const resolvedProvider: Provider = provider || user.provider || "anthropic"
+
+  // resolve the right api key for the chosen provider
+  const apiKey =
+    resolvedProvider === "anthropic" ? user.api_key :
+    resolvedProvider === "openai" ? user.openai_api_key :
+    resolvedProvider === "gemini" ? user.gemini_api_key :
+    null  // ollama: no key needed
+
+  const resolvedModel = model || user.model || PROVIDER_MODELS[resolvedProvider][0].id
+
+  try {
+    const job = await addJob(
+      user.id,
+      command,
+      repo,
+      user.tier,
+      resolvedProvider,
+      resolvedModel,
+      apiKey,
+      user.github_token
+    )
+    res.status(201).json(job)
+  } catch (err: any) {
+    res.status(400).json({ error: err.message })
   }
+})
 
-  // route the job to cloud or local runner based on the user's tier
-  const job = await addJob(
-    user.id,
-    command,
-    repo,
-    user.tier,
-    user.api_key,
-    user.github_token
-  )
-
-  res.status(201).json(job)
+// get recent job history for the authenticated user
+router.get("/", requireAuth, async (_req: Request, res: Response) => {
+  const user = res.locals.user
+  const jobs = await getUserJobs(user.id)
+  res.json(jobs)
 })
 
 // get the status of a job by id
