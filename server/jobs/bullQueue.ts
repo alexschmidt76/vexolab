@@ -11,6 +11,7 @@ const connection = new IORedis(config.redisUrl, { maxRetriesPerRequest: null })
 connection.on("error", (err) => console.error("Redis connection error:", err.message))
 
 export const jobQueue = new Queue("orvitlab-jobs", { connection })
+jobQueue.on("error", (err) => console.error("BullMQ queue error:", err.message))
 
 // update a job's fields directly — avoids circular imports with queue.ts
 async function dbUpdateJob(id: string, updates: Record<string, any>) {

@@ -21,7 +21,8 @@ import { startWorker } from "./jobs/bullQueue"
 
 console.log("=== SERVER STARTING ===")
 console.log("PORT:", process.env.PORT || "(not set, using 3000)")
-console.log("REDIS_URL:", process.env.REDIS_URL ? "set" : "NOT SET")
+const redisHost = (() => { try { return new URL(process.env.REDIS_URL || "").hostname } catch { return "parse-error" } })()
+console.log("REDIS_URL host:", redisHost || "NOT SET")
 console.log("SUPABASE_URL:", process.env.SUPABASE_URL ? "set" : "NOT SET")
 console.log("JWT_SECRET:", process.env.JWT_SECRET ? "set" : "NOT SET")
 console.log("GITHUB_CLIENT_ID:", process.env.GITHUB_CLIENT_ID ? "set" : "NOT SET")
