@@ -35,3 +35,12 @@ export async function requireAuth(
     res.status(401).json({ error: "Invalid token" })
   }
 }
+
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  const user = res.locals.user
+  if (!user) return res.status(401).json({ error: "Unauthorized" })
+  if (user.github_username !== config.adminGithubUsername) {
+    return res.status(403).json({ error: "Forbidden" })
+  }
+  next()
+}

@@ -1,19 +1,10 @@
-import { Router, Request, Response, NextFunction } from "express"
+import { Router, Request, Response } from "express"
 import { db } from "../db/index"
-import config from "../config/index"
+import { requireAuth, requireAdmin } from "../auth/middleware"
 
 const router = Router()
 
-// protect all admin routes with the admin secret header — not user JWT
-function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  const secret = req.headers["x-admin-secret"]
-  if (secret !== config.adminSecret) {
-    return res.status(401).json({ error: "Unauthorized" })
-  }
-  next()
-}
-
-router.get("/stats", requireAdmin, async (_req: Request, res: Response) => {
+router.get("/stats", requireAuth, requireAdmin, async (_req: Request, res: Response) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString()
@@ -62,7 +53,7 @@ router.get("/stats", requireAdmin, async (_req: Request, res: Response) => {
 })
 
 // per-user token usage breakdown — identify heavy pooled-key users
-router.get("/costs", requireAdmin, async (_req: Request, res: Response) => {
+router.get("/costs", requireAuth, requireAdmin, async (_req: Request, res: Response) => {
   const startOfMonth = new Date(
     new Date().getFullYear(),
     new Date().getMonth(),
@@ -104,7 +95,7 @@ router.get("/costs", requireAdmin, async (_req: Request, res: Response) => {
 })
 
 // recent jobs across all users
-router.get("/jobs", requireAdmin, async (_req: Request, res: Response) => {
+router.get("/jobs", requireAuth, requireAdmin, async (_req: Request, res: Response) => {
   const { data } = await db
     .from("jobs")
     .select("*, users(github_username, tier)")

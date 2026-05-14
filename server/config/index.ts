@@ -17,6 +17,7 @@ export default {
   stripeProApiPriceId: process.env.STRIPE_PRO_API_PRICE_ID!,
   redisUrl: process.env.REDIS_URL || "redis://localhost:6379",
   adminSecret: process.env.ADMIN_SECRET!,
+  adminGithubUsername: process.env.ADMIN_GITHUB_USERNAME!,
   cliVersion: process.env.CLI_VERSION || "1.0.0",
   runnerPollInterval: parseInt(process.env.RUNNER_POLL_INTERVAL_MS || "5000"),
   sandboxDir: process.env.SANDBOX_DIR || "/tmp/vexolab-sandbox",

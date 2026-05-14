@@ -1,55 +1,53 @@
-import { useState } from "react"
-import axios from "axios"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../lib/AuthContext"
+import { api } from "../api"
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000"
+const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME
 
 export default function Admin() {
+  const { user, token, loading } = useAuth()
+  const navigate = useNavigate()
   const [stats, setStats] = useState<any>(null)
   const [costs, setCosts] = useState<any[]>([])
-  const [secret, setSecret] = useState("")
-  const [authed, setAuthed] = useState(false)
-  const [error, setError] = useState("")
+  const [dataLoading, setDataLoading] = useState(true)
 
-  async function load() {
-    setError("")
+  useEffect(() => {
+    if (loading) return
+    if (!user || user.githubUsername !== ADMIN_USERNAME) {
+      navigate("/", { replace: true })
+      return
+    }
+    loadData()
+  }, [user, loading])
+
+  async function loadData() {
     try {
-      const headers = { "x-admin-secret": secret }
+      const client = api(token!)
       const [statsRes, costsRes] = await Promise.all([
-        axios.get(`${SERVER_URL}/admin/stats`, { headers }),
-        axios.get(`${SERVER_URL}/admin/costs`, { headers }),
+        client.get("/admin/stats"),
+        client.get("/admin/costs"),
       ])
       setStats(statsRes.data)
       setCosts(costsRes.data)
-      setAuthed(true)
-    } catch {
-      setError("Wrong admin secret or server unreachable.")
+    } catch (err) {
+      console.error("Failed to load admin data:", err)
+    } finally {
+      setDataLoading(false)
     }
   }
 
-  if (!authed) {
+  if (loading || dataLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="bg-brand-surface border border-brand-border rounded-2xl p-8 w-full max-w-sm">
-          <h2 className="text-brand-text text-xl font-bold mb-6">Admin Access</h2>
-          <input
-            type="password"
-            className="w-full bg-brand-bg border border-brand-border text-brand-text rounded-lg px-4 py-3 text-sm mb-3 outline-none focus:border-brand-accent"
-            placeholder="Admin secret"
-            value={secret}
-            onChange={(e) => setSecret(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && load()}
-          />
-          {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
-          <button
-            className="w-full bg-brand-accent text-white py-3 rounded-lg font-semibold hover:bg-indigo-500 transition-colors"
-            onClick={load}
-          >
-            Enter
-          </button>
-        </div>
+        <div className="w-6 h-6 border-2 border-brand-accent border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
+
+  if (!stats) return null
+
+  const marginPositive = parseFloat(stats.estimatedMargin) >= 0
 
   const STAT_CARDS = [
     { label: "Total Users", value: stats.totalUsers },
@@ -63,8 +61,6 @@ export default function Admin() {
     { label: "Est. API Cost", value: `$${stats.estimatedCostThisMonth}` },
     { label: "Est. Margin", value: `$${stats.estimatedMargin}`, highlight: true },
   ]
-
-  const marginPositive = parseFloat(stats.estimatedMargin) >= 0
 
   return (
     <div>
@@ -83,7 +79,6 @@ export default function Admin() {
         ))}
       </div>
 
-      {/* Profitability banner */}
       {stats.mrr > 0 && (
         <div className={`rounded-xl p-4 mb-8 ${
           marginPositive
@@ -99,7 +94,6 @@ export default function Admin() {
         </div>
       )}
 
-      {/* Per-user cost table */}
       <p className="text-xs text-brand-muted uppercase tracking-wider mb-3">
         Top Users by Token Usage This Month
       </p>

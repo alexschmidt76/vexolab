@@ -8,6 +8,8 @@ import Thread from "./pages/Thread"
 import Scheduled from "./pages/Scheduled"
 import { AuthProvider, useAuth } from "./lib/AuthContext"
 
+const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME
+
 function Nav() {
   const { user, logout } = useAuth()
 
@@ -23,7 +25,9 @@ function Nav() {
       <NavLink to="/scheduled" className={linkClass}>Scheduled</NavLink>
       <NavLink to="/settings" className={linkClass}>Settings</NavLink>
       <NavLink to="/upgrade" className={linkClass}>Upgrade</NavLink>
-      <NavLink to="/admin" className={linkClass}>Admin</NavLink>
+      {user?.githubUsername === ADMIN_USERNAME && (
+        <NavLink to="/admin" className={linkClass}>Admin</NavLink>
+      )}
       <div className="ml-auto flex items-center gap-3">
         <span className="text-brand-muted text-sm">@{user?.githubUsername}</span>
         <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
