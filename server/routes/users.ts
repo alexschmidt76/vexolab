@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express"
 import { requireAuth } from "../auth/middleware"
 import { db } from "../db/index"
+import { MODEL_COSTS } from "../../shared/types"
 
 const router = Router()
 
@@ -23,6 +24,21 @@ router.get("/me", requireAuth, async (_req: Request, res: Response) => {
     (sum: number, row: any) => sum + row.tokens_used, 0
   )
 
+  const { data: jobUsage } = await db
+    .from("jobs")
+    .select("tokens_used, model")
+    .eq("user_id", user.id)
+    .eq("status", "done")
+    .not("tokens_used", "is", null)
+    .gte("created_at", startOfMonth)
+
+  const estimatedSpendUsd = parseFloat(
+    (jobUsage || []).reduce((sum: number, job: any) => {
+      const costPer1M = MODEL_COSTS[job.model] ?? 0
+      return sum + (job.tokens_used / 1_000_000) * costPer1M
+    }, 0).toFixed(4)
+  )
+
   res.json({
     id: user.id,
     githubUsername: user.github_username,
@@ -33,6 +49,7 @@ router.get("/me", requireAuth, async (_req: Request, res: Response) => {
     spendLimitUsd: user.spend_limit_usd ?? null,
     spendStatus: null,
     tokensThisMonth,
+    estimatedSpendUsd,
     jobsThisMonth: 0,
     apiKey: maskKey(user.api_key),
     openaiApiKey: maskKey(user.openai_api_key),

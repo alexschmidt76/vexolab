@@ -220,6 +220,9 @@ export default function Settings() {
             {user.tokensThisMonth != null && (
               <p className="text-xs text-brand-muted mt-1">{user.tokensThisMonth.toLocaleString()} tokens used this month</p>
             )}
+            {(user.hasAnthropicKey || user.hasOpenAiKey || user.hasGeminiKey) && user.estimatedSpendUsd != null && (
+              <p className="text-xs text-brand-muted mt-0.5">~${user.estimatedSpendUsd.toFixed(4)} est. spend this month</p>
+            )}
           </div>
           <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
             user.tier === "free" ? "bg-zinc-700 text-zinc-300" : "bg-brand-accent text-white"

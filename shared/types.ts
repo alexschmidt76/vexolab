@@ -30,6 +30,22 @@ export const PROVIDER_MODELS: Record<Provider, { id: string; label: string; fast
   ],
 }
 
+export const MODEL_COSTS: Record<string, number> = {
+  // Anthropic — blended input/output estimate per 1M tokens
+  "claude-opus-4-7":           50.00,
+  "claude-sonnet-4-6":         10.00,
+  "claude-haiku-4-5-20251001":  3.00,
+  // OpenAI
+  "gpt-4o":       8.00,
+  "gpt-4o-mini":  0.45,
+  "o3-mini":      3.00,
+  // Gemini
+  "gemini-1.5-pro":   4.00,
+  "gemini-1.5-flash": 0.25,
+  "gemini-2.0-flash": 0.30,
+  // Ollama — self-hosted, free
+}
+
 export type JobThread = {
   id: string
   userId: string
@@ -102,6 +118,7 @@ export type User = {
   hasGeminiKey: boolean
   jobsThisMonth: number
   tokensThisMonth: number
+  estimatedSpendUsd: number
   createdAt: Date
 }
 
