@@ -12,7 +12,7 @@ export async function runAgent(
   const client = new Anthropic({ apiKey: apiKey || config.anthropicKey })
   const response = await client.messages.create({
     model,
-    max_tokens: 1024,
+    max_tokens: 8096,
     system: `You are an AI developer agent. When given a command:
 1. Describe what files to create or modify
 2. Output the actual code changes
