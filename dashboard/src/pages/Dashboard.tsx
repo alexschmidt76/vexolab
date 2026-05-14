@@ -57,6 +57,16 @@ export default function Dashboard() {
     }
   }, [jobs, token])
 
+  async function retryJob(jobId: string) {
+    await api(token!).post(`/jobs/${jobId}/retry`)
+    loadJobs()
+  }
+
+  async function deleteJobById(jobId: string) {
+    await api(token!).delete(`/jobs/${jobId}`)
+    setJobs((prev) => prev.filter((j) => j.id !== jobId))
+  }
+
   async function submitJob() {
     if (!command.trim() || !repo.trim()) return
     setSubmitError("")
@@ -178,6 +188,24 @@ export default function Dashboard() {
               )}
               {job.error && (
                 <p className="mt-2 text-xs text-red-400 bg-red-950 rounded p-2">{job.error}</p>
+              )}
+              {(job.status === "failed" || job.status === "pending") && (
+                <div className="mt-3 flex gap-2">
+                  {job.status === "failed" && (
+                    <button
+                      onClick={() => retryJob(job.id)}
+                      className="text-xs px-3 py-1 rounded bg-brand-accent text-white hover:bg-indigo-500 transition-colors"
+                    >
+                      Retry
+                    </button>
+                  )}
+                  <button
+                    onClick={() => deleteJobById(job.id)}
+                    className="text-xs px-3 py-1 rounded bg-red-900 text-red-300 hover:bg-red-800 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
               )}
             </div>
           ))}

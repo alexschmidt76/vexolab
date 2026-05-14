@@ -104,6 +104,14 @@ export async function updateJob(id: string, updates: Partial<Job>) {
   await db.from("jobs").update(updates).eq("id", id)
 }
 
+// delete a job by id (only pending or failed)
+export async function deleteJob(id: string): Promise<boolean> {
+  const { data } = await db.from("jobs").select("status").eq("id", id).single()
+  if (!data || (data.status !== "pending" && data.status !== "failed")) return false
+  await db.from("jobs").delete().eq("id", id)
+  return true
+}
+
 // get the most recent 50 jobs for a user
 export async function getUserJobs(userId: string): Promise<Job[]> {
   const { data } = await db
