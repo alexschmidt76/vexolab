@@ -7,7 +7,6 @@ import config from "../config/index"
 export const publicApiRateLimit = rateLimit({
   windowMs: 60 * 1000,
   max: config.publicApiRateLimitPerMinute,
-  keyGenerator: (req) => (req.headers["x-api-key"] as string) || req.ip || "unknown",
   message: { error: "Rate limit exceeded. Max 60 requests per minute." },
 })
 
