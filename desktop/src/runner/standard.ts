@@ -34,7 +34,7 @@ async function pushToGitHub(
   if (!token) throw new Error("GITHUB_TOKEN not set")
 
   const { Octokit } = await import("@octokit/rest")
-  const octokit = new Octokit({ auth: token })
+  const octokit = new Octokit({ auth: token, headers: { "X-GitHub-Api-Version": "2022-11-28" } })
   const [owner, repoName] = repo.split("/")
 
   const { data: ref } = await octokit.git.getRef({ owner, repo: repoName, ref: "heads/main" })

@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest"
 
 export async function getRepoConfig(repo: string, githubToken: string): Promise<string | null> {
-  const octokit = new Octokit({ auth: githubToken })
+  const octokit = new Octokit({ auth: githubToken, headers: { "X-GitHub-Api-Version": "2022-11-28" } })
   const [owner, repoName] = repo.split("/")
 
   try {

@@ -56,7 +56,7 @@ async function processJob(job: any) {
     const result = JSON.parse(raw.replace(/```json|```/g, "").trim())
 
     // connect to github and parse repo string
-    const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN })
+    const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN, headers: { "X-GitHub-Api-Version": "2022-11-28" } })
     const [owner, repo] = job.repo.split("/")
 
     // get main branch and create a new branch

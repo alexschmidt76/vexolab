@@ -2,7 +2,7 @@ import './index.css'
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-[#f4f4f5] flex flex-col">
+    <div className="min-h-screen flex flex-col">
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 py-5 border-b border-zinc-800">
@@ -22,7 +22,7 @@ export default function App() {
         </div>
         <h1 className="text-5xl sm:text-6xl font-bold tracking-tight mb-6 max-w-3xl leading-tight">
           Command from anywhere.<br />
-          <span className="text-indigo-400">Build everywhere.</span>
+          <span className="text-brand-main">Build everywhere.</span>
         </h1>
         <p className="text-zinc-400 text-lg max-w-xl mb-10">
           VexoLab turns your ideas into pull requests. Send a command from your phone

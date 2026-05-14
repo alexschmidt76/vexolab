@@ -17,7 +17,8 @@ export const jobQueue = new Queue("vexolab-jobs", { connection })
 jobQueue.on("error", (err) => console.error("BullMQ queue error:", err.message))
 
 async function dbUpdateJob(id: string, updates: Record<string, any>) {
-  await db.from("jobs").update(updates).eq("id", id)
+  const { error } = await db.from("jobs").update(updates).eq("id", id)
+  if (error) console.error(`[db] update failed for job ${id}:`, error.message, updates)
 }
 
 async function processJob(bull: BullJob) {
@@ -26,33 +27,39 @@ async function processJob(bull: BullJob) {
   }
 
   const { jobId, command, repo, apiKey, githubToken, userId, provider, model } = bull.data
+  console.log(`[job ${jobId}] starting — repo=${repo} provider=${provider} model=${model}`)
   await dbUpdateJob(jobId, { status: "running" })
 
   try {
-    // Fetch repo config (.vexolab.md) and run agent
+    console.log(`[job ${jobId}] fetching repo config`)
     const repoConfig = await getRepoConfig(repo, githubToken)
+
+    console.log(`[job ${jobId}] running agent`)
     const raw = await runAgent(command, provider as Provider, apiKey, model, repoConfig)
     const result = JSON.parse(raw)
     const { tokensUsed } = result
+    console.log(`[job ${jobId}] agent done — branch=${result.branch} files=${result.files?.length ?? 0} tokens=${tokensUsed}`)
 
-    // Run build check on generated files
+    console.log(`[job ${jobId}] running build check`)
     const buildResult = await runBuildCheck(result.files)
     await dbUpdateJob(jobId, { build_output: buildResult.output })
+    console.log(`[job ${jobId}] build check done — passed=${buildResult.passed}`)
 
-    // Run self-review before opening PR
+    console.log(`[job ${jobId}] running self-review`)
     const review = await reviewOutput(command, result.files, provider, model, apiKey)
     await dbUpdateJob(jobId, { self_review: review.feedback })
+    console.log(`[job ${jobId}] self-review done — approved=${review.approved}`)
 
-    // Create branch and commit files
+    console.log(`[job ${jobId}] creating branch and committing files`)
     await createBranch(repo, result.branch, githubToken)
     for (const file of result.files) {
       await commitFile(repo, result.branch, file.path, file.content, `VexoLab: ${result.summary}`, githubToken)
     }
 
     const prUrl = await openPR(repo, result.branch, result.summary, `Created by VexoLab\n\nCommand: "${command}"`, githubToken)
+    console.log(`[job ${jobId}] PR opened — ${prUrl}`)
 
-    // Create thread record for this job
-    const { data: thread } = await db
+    const { data: thread, error: threadError } = await db
       .from("job_threads")
       .insert({
         user_id: userId,
@@ -65,8 +72,11 @@ async function processJob(bull: BullJob) {
       })
       .select()
       .single()
+    if (threadError) console.error(`[job ${jobId}] thread insert error:`, threadError.message)
 
-    await db.from("token_usage").insert({ user_id: userId, job_id: jobId, tokens_used: tokensUsed })
+    const { error: tokenError } = await db.from("token_usage").insert({ user_id: userId, job_id: jobId, tokens_used: tokensUsed })
+    if (tokenError) console.error(`[job ${jobId}] token_usage insert error:`, tokenError.message)
+
     await dbUpdateJob(jobId, {
       status: "done",
       branch: result.branch,
@@ -74,11 +84,14 @@ async function processJob(bull: BullJob) {
       tokens_used: tokensUsed,
       thread_id: thread?.id || null,
     })
+    console.log(`[job ${jobId}] done`)
 
     await sendNotification(userId, "Job Complete", `PR opened: ${result.summary}`)
   } catch (err: any) {
-    await dbUpdateJob(jobId, { status: "failed", error: err.message })
-    await sendNotification(userId, "Job Failed", err.message)
+    const message = err?.message || String(err)
+    console.error(`[job ${jobId}] failed:`, message)
+    await dbUpdateJob(jobId, { status: "failed", error: message })
+    await sendNotification(userId, "Job Failed", message)
   }
 }
 
@@ -89,13 +102,18 @@ async function processRepair(bull: BullJob) {
     isSoftWarning, softWarningMessage,
   } = bull.data
 
-  await db.from("job_iterations").update({ status: "running" }).eq("id", iterationId)
+  console.log(`[repair ${iterationId}] starting — repo=${repo} branch=${branch}`)
+  const { error: startError } = await db.from("job_iterations").update({ status: "running" }).eq("id", iterationId)
+  if (startError) console.error(`[repair ${iterationId}] status update error:`, startError.message)
 
   try {
     const repoConfig = await getRepoConfig(repo, githubToken)
+
+    console.log(`[repair ${iterationId}] running agent`)
     const raw = await runAgent(repairPrompt, provider as Provider, apiKey, model, repoConfig)
     const result = JSON.parse(raw.replace(/```json|```/g, "").trim())
     const tokensUsed = result.tokensUsed || 0
+    console.log(`[repair ${iterationId}] agent done — files=${result.files?.length ?? 0}`)
 
     const buildResult = await runBuildCheck(result.files)
     const review = await reviewOutput(repairPrompt, result.files, provider, model, apiKey)
@@ -108,12 +126,14 @@ async function processRepair(bull: BullJob) {
       )
     }
 
-    await db.from("job_iterations").update({
+    const { error: doneError } = await db.from("job_iterations").update({
       status: "done",
       tokens_used: tokensUsed,
       self_review: review.feedback,
       build_output: buildResult.output,
     }).eq("id", iterationId)
+    if (doneError) console.error(`[repair ${iterationId}] done update error:`, doneError.message)
+    console.log(`[repair ${iterationId}] done`)
 
     const notifBody = isSoftWarning
       ? `${softWarningMessage} — Repair complete: ${result.summary}`
@@ -121,11 +141,14 @@ async function processRepair(bull: BullJob) {
 
     await sendNotification(userId, "Repair ready", notifBody)
   } catch (err: any) {
-    await db.from("job_iterations").update({
+    const message = err?.message || String(err)
+    console.error(`[repair ${iterationId}] failed:`, message)
+    const { error: failError } = await db.from("job_iterations").update({
       status: "failed",
-      error_report: err.message,
+      error_report: message,
     }).eq("id", iterationId)
-    await sendNotification(userId, "Repair failed", err.message)
+    if (failError) console.error(`[repair ${iterationId}] fail update error:`, failError.message)
+    await sendNotification(userId, "Repair failed", message)
   }
 }
 

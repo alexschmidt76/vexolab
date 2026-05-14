@@ -10,7 +10,7 @@ export async function runAgent(
   model: string = "claude-sonnet-4-6",
   systemSuffix?: string
 ): Promise<AgentResult> {
-  const client = new Anthropic({ apiKey: apiKey || config.anthropicKey })
+  const client = new Anthropic({ apiKey: apiKey || config.anthropicKey, timeout: 90_000 })
   const baseSystem = `You are an AI developer agent. When given a command:
 1. Describe what files to create or modify
 2. Output the actual code changes

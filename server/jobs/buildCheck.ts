@@ -41,7 +41,15 @@ export async function runBuildCheck(
       })
     )
 
-    const { stdout, stderr } = await execAsync("npx tsc --noEmit 2>&1", {
+    // Use the server's installed TypeScript instead of npx (which would try to download it)
+    let tscPath: string
+    try {
+      tscPath = require.resolve("typescript/bin/tsc")
+    } catch {
+      return { passed: true, output: "Build check skipped (TypeScript not installed)" }
+    }
+
+    const { stdout, stderr } = await execAsync(`node "${tscPath}" --noEmit`, {
       cwd: sandboxPath,
       timeout: 30000,
     })

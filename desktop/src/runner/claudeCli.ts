@@ -50,7 +50,7 @@ export async function runClaudeCli(
     await execAsync(`git push origin ${branchName}`, { cwd: tempDir })
 
     const { Octokit } = await import("@octokit/rest")
-  const octokit = new Octokit({ auth: token })
+  const octokit = new Octokit({ auth: token, headers: { "X-GitHub-Api-Version": "2022-11-28" } })
     const { data: pr } = await octokit.pulls.create({
       owner,
       repo: repoName,

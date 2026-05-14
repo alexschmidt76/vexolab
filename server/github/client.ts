@@ -2,7 +2,10 @@ import { Octokit } from "@octokit/rest"
 
 // create an octokit instance using the user's github token
 function client(token: string) {
-  return new Octokit({ auth: token })
+  return new Octokit({
+    auth: token,
+    headers: { "X-GitHub-Api-Version": "2022-11-28" },
+  })
 }
 
 // get the sha of main and create a new branch from it
