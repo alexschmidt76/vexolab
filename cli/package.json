@@ -1,11 +1,11 @@
 {
-  "name": "orvitlab",
+  "name": "vexolab",
   "version": "1.0.0",
-  "description": "OrvitLab CLI — run AI dev agent jobs from your terminal",
+  "description": "VexoLab CLI — run AI dev agent jobs from your terminal",
   "type": "commonjs",
   "main": "dist/index.js",
   "bin": {
-    "orvitlab": "./dist/index.js"
+    "vexolab": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",

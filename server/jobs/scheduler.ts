@@ -2,10 +2,10 @@ import { db } from "../db/index"
 import { addJob } from "./queue"
 import config from "../config/index"
 import cronstrue from "cronstrue"
-import { parseExpression } from "cron-parser"
+import CronExpressionParser from "cron-parser"
 
 export function getNextRunTime(cronExpression: string): Date {
-  return parseExpression(cronExpression).next().toDate()
+  return CronExpressionParser.parse(cronExpression).next().toDate()
 }
 
 export function describeSchedule(cronExpression: string): string {

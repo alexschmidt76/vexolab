@@ -124,7 +124,7 @@ export default function SettingsScreen() {
     )
     Alert.alert(
       "Runner Token",
-      `${data.token}\n\nAdd this to your local runner .env as ORVITLAB_TOKEN`
+      `${data.token}\n\nAdd this to your local runner .env as VEXOLAB_TOKEN`
     )
   }
 
@@ -280,7 +280,7 @@ export default function SettingsScreen() {
         {isCloud ? (
           <View className="bg-brand-surface p-4 rounded-xl mb-6">
             <Text className="text-brand-accent font-semibold mb-1">Cloud Runner Active</Text>
-            <Text className="text-brand-muted text-sm">Jobs run on OrvitLab servers. Your computer can stay off.</Text>
+            <Text className="text-brand-muted text-sm">Jobs run on VexoLab servers. Your computer can stay off.</Text>
           </View>
         ) : (
           <View className="bg-brand-surface p-4 rounded-xl mb-6">

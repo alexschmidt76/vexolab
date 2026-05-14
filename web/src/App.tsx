@@ -6,9 +6,9 @@ export default function App() {
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 py-5 border-b border-zinc-800">
-        <span className="text-xl font-bold tracking-tight">OrvitLab</span>
+        <span className="text-xl font-bold tracking-tight">VexoLab</span>
         <a
-          href="mailto:support@orvitlab.com"
+          href="mailto:support@vexolab.com"
           className="text-sm text-zinc-400 hover:text-white transition-colors"
         >
           Contact
@@ -25,18 +25,18 @@ export default function App() {
           <span className="text-indigo-400">Build everywhere.</span>
         </h1>
         <p className="text-zinc-400 text-lg max-w-xl mb-10">
-          OrvitLab turns your ideas into pull requests. Send a command from your phone
+          VexoLab turns your ideas into pull requests. Send a command from your phone
           and let the AI agent create branches, write code, and open PRs on GitHub — automatically.
         </p>
         <div className='flex justify-between items-center [&_a]:mx-1'>
           <a
-            href="mailto:support@orvitlab.dev"
+            href="mailto:support@vexolab.dev"
             className="bg-indigo-500 hover:bg-indigo-600 transition-colors text-white font-semibold px-6 py-3 rounded-xl text-base"
           >
             Get Early Access
           </a>
           <a
-            href="https://app.orvitlab.dev"
+            href="https://app.vexolab.dev"
             className="bg-indigo-500 hover:bg-indigo-600 transition-colors text-white font-semibold px-6 py-3 rounded-xl text-base"
           >
             Web Dashboard
@@ -60,9 +60,9 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-zinc-800 px-8 py-6 flex items-center justify-between text-zinc-500 text-sm">
-        <span>© {new Date().getFullYear()} OrvitLab</span>
-        <a href="mailto:support@orvitlab.com" className="hover:text-white transition-colors">
-          support@orvitlab.com
+        <span>© {new Date().getFullYear()} VexoLab</span>
+        <a href="mailto:support@vexolab.com" className="hover:text-white transition-colors">
+          support@vexolab.com
         </a>
       </footer>
     </div>

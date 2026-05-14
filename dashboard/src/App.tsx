@@ -18,7 +18,7 @@ function Nav() {
 
   return (
     <nav className="border-b border-brand-border px-6 py-3 flex items-center gap-2">
-      <span className="text-brand-text font-bold mr-6">OrvitLab</span>
+      <span className="text-brand-text font-bold mr-6">VexoLab</span>
       <NavLink to="/dashboard" className={linkClass}>Dashboard</NavLink>
       <NavLink to="/scheduled" className={linkClass}>Scheduled</NavLink>
       <NavLink to="/settings" className={linkClass}>Settings</NavLink>

@@ -9,7 +9,7 @@ const PLANS: { tier: Tier; name: string; price: string; limit: string; descripti
     name: "Starter",
     price: "$5/mo",
     limit: "100 jobs/month",
-    description: "Cloud runner, OrvitLab's API key included. No setup required.",
+    description: "Cloud runner, VexoLab's API key included. No setup required.",
   },
   {
     tier: "pro",

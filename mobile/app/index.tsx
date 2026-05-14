@@ -45,7 +45,7 @@ export default function HomeScreen({ token, user }: { token: string; user: any }
 
   return (
     <ScrollView className="flex-1 bg-brand-bg" contentContainerStyle={{ padding: 24, justifyContent: "center", flexGrow: 1 }}>
-      <Text className="text-brand-text text-3xl font-bold mb-1">OrvitLab</Text>
+      <Text className="text-brand-text text-3xl font-bold mb-1">VexoLab</Text>
       <Text className="text-brand-muted text-sm mb-8">
         @{user?.github_username} · {user?.tier}
       </Text>

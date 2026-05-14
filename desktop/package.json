@@ -1,7 +1,7 @@
 {
-  "name": "orvitlab-desktop",
+  "name": "vexolab-desktop",
   "version": "1.0.0",
-  "description": "OrvitLab desktop runner app",
+  "description": "VexoLab desktop runner app",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
@@ -22,12 +22,12 @@
     "typescript": "^5.8.3"
   },
   "build": {
-    "appId": "com.orvitlab.desktop",
-    "productName": "OrvitLab",
+    "appId": "com.vexolab.desktop",
+    "productName": "VexoLab",
     "files": ["dist/**/*", "src/renderer/**/*"],
     "mac": { "category": "public.app-category.developer-tools" },
     "win": { "target": "nsis" },
     "linux": { "target": "AppImage" },
-    "publish": { "provider": "github", "owner": "your-github-username", "repo": "orvitlab" }
+    "publish": { "provider": "github", "owner": "your-github-username", "repo": "vexolab" }
   }
 }

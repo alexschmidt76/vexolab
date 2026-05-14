@@ -35,7 +35,7 @@ router.post("/jobs", async (req: Request, res: Response) => {
 })
 
 router.get("/jobs/:id", async (req: Request, res: Response) => {
-  const job = await getJob(req.params.id)
+  const job = await getJob(req.params.id as string)
   if (!job) return res.status(404).json({ error: "Not found" })
   res.json(job)
 })

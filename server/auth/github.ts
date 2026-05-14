@@ -61,7 +61,7 @@ router.get("/github/callback", async (req: Request, res: Response) => {
       expiresIn: "30d",
     })
 
-    const dashboardUrl = process.env.DASHBOARD_URL || "https://app.orvitlab.dev"
+    const dashboardUrl = process.env.DASHBOARD_URL || "https://app.vexolab.dev"
 
     if (platform === "web") {
       res.redirect(`${dashboardUrl}/login?token=${token}`)

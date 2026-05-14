@@ -36,8 +36,8 @@ const app = express()
 
 const ALLOWED_ORIGINS = [
   /^http:\/\/localhost(:\d+)?$/,
-  /^https?:\/\/orvitlab\.dev$/,
-  /^https?:\/\/.*\.orvitlab\.dev$/,
+  /^https?:\/\/vexolab\.dev$/,
+  /^https?:\/\/.*\.vexolab\.dev$/,
 ]
 
 app.use(cors({
@@ -68,7 +68,7 @@ app.use("/api-keys", apiKeysRouter)
 app.use("/api/v1", publicApiRouter)
 
 app.get("/", (_, res) => res.json({ ok: true }))
-app.get("/health", (_, res) => res.json({ status: "ok", app: "OrvitLab", version: config.cliVersion }))
+app.get("/health", (_, res) => res.json({ status: "ok", app: "VexoLab", version: config.cliVersion }))
 app.get("/billing/success", (_, res) => res.send("<h2>Upgrade successful! You are now on a paid plan.</h2>"))
 app.get("/billing/cancel", (_, res) => res.send("<h2>Upgrade cancelled.</h2>"))
 
@@ -85,7 +85,7 @@ try {
 startScheduler()
 
 const server = app.listen(config.port, () => {
-  console.log(`OrvitLab server running on port ${config.port}`)
+  console.log(`VexoLab server running on port ${config.port}`)
 })
 
 process.on("SIGTERM", () => {

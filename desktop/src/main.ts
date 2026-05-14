@@ -4,8 +4,8 @@ import path from "path"
 import axios from "axios"
 import { processJob, detectClaudeCli, RunnerMode } from "./runner/index"
 
-const SERVER_URL = process.env.ORVITLAB_SERVER_URL || "https://api.orvitlab.com"
-const TOKEN = process.env.ORVITLAB_TOKEN || ""
+const SERVER_URL = process.env.VEXOLAB_SERVER_URL || "https://api.vexolab.com"
+const TOKEN = process.env.VEXOLAB_TOKEN || ""
 const POLL_INTERVAL = 5000
 const headers = { Authorization: `Bearer ${TOKEN}` }
 
@@ -32,7 +32,7 @@ function createWindow() {
 
 function buildMenu() {
   const menu = Menu.buildFromTemplate([
-    { label: "OrvitLab Runner", enabled: false },
+    { label: "VexoLab Runner", enabled: false },
     { type: "separator" },
     { label: isRunning ? "● Running" : "○ Idle", enabled: false },
     { label: `Mode: ${runnerMode}`, enabled: false },
@@ -76,13 +76,13 @@ async function pollForJobs() {
 
     if (data.job) {
       isRunning = true
-      tray?.setToolTip(`OrvitLab — Running: "${data.job.command.slice(0, 30)}..."`)
+      tray?.setToolTip(`VexoLab — Running: "${data.job.command.slice(0, 30)}..."`)
       win?.webContents.send("job-started", { job: data.job, runnerMode })
 
       await processJob(data.job, runnerMode)
 
       isRunning = false
-      tray?.setToolTip("OrvitLab — Idle")
+      tray?.setToolTip("VexoLab — Idle")
       win?.webContents.send("job-complete", data.job)
       buildMenu()
     }
@@ -111,7 +111,7 @@ app.whenReady().then(async () => {
 
   const icon = nativeImage.createEmpty()
   tray = new Tray(icon)
-  tray.setToolTip("OrvitLab — Idle")
+  tray.setToolTip("VexoLab — Idle")
   buildMenu()
 
   autoUpdater.checkForUpdatesAndNotify()
@@ -122,4 +122,4 @@ app.whenReady().then(async () => {
   })
 })
 
-app.on("window-all-closed", (e: Event) => e.preventDefault())
+app.on("window-all-closed", () => { /* keep app alive when all windows close */ })

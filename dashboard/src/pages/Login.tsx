@@ -25,7 +25,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-brand-bg">
       <div className="bg-brand-surface border border-brand-border rounded-2xl p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-brand-text mb-1">OrvitLab</h1>
+        <h1 className="text-2xl font-bold text-brand-text mb-1">VexoLab</h1>
         <p className="text-brand-muted text-sm mb-8">Command from anywhere.</p>
 
         <a

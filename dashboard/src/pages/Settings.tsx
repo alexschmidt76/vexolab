@@ -198,7 +198,7 @@ export default function Settings() {
       {/* Runner token */}
       <section>
         <p className={label}>Local Runner Token</p>
-        <p className="text-xs text-brand-muted mb-3">Add to <code className="text-brand-text">runner/.env</code> as <code className="text-brand-text">ORVITLAB_TOKEN</code>.</p>
+        <p className="text-xs text-brand-muted mb-3">Add to <code className="text-brand-text">runner/.env</code> as <code className="text-brand-text">VEXOLAB_TOKEN</code>.</p>
         {runnerToken ? (
           <div className="bg-brand-bg border border-brand-border rounded-lg px-4 py-3 text-xs font-mono text-brand-text break-all">{runnerToken}</div>
         ) : (

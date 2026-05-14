@@ -4,8 +4,8 @@ import Anthropic from "@anthropic-ai/sdk"
 import { Octokit } from "@octokit/rest"
 dotenv.config()
 
-const SERVER_URL = process.env.ORVITLAB_SERVER_URL || "https://api.orvitlab.com"
-const AUTH_TOKEN = process.env.ORVITLAB_TOKEN!
+const SERVER_URL = process.env.VEXOLAB_SERVER_URL || "https://api.vexolab.com"
+const AUTH_TOKEN = process.env.VEXOLAB_TOKEN!
 const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL_MS || "5000")
 
 const headers = { Authorization: `Bearer ${AUTH_TOKEN}` }
@@ -73,7 +73,7 @@ async function processJob(job: any) {
         owner, repo,
         path: file.path,
         branch: result.branch,
-        message: `OrvitLab: ${result.summary}`,
+        message: `VexoLab: ${result.summary}`,
         content: Buffer.from(file.content).toString("base64"),
       })
     }
@@ -82,7 +82,7 @@ async function processJob(job: any) {
     const { data: pr } = await octokit.pulls.create({
       owner, repo,
       title: result.summary,
-      body: `Created by OrvitLab\n\nCommand: "${job.command}"`,
+      body: `Created by VexoLab\n\nCommand: "${job.command}"`,
       head: result.branch,
       base: "main",
     })
@@ -104,5 +104,5 @@ async function processJob(job: any) {
   }
 }
 
-console.log("OrvitLab local runner started - polling for jobs...")
+console.log("VexoLab local runner started - polling for jobs...")
 setInterval(pollForJobs, POLL_INTERVAL)

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { api } from "../api"
 import { useAuth } from "../lib/AuthContext"
-import { JobThread, JobIteration } from "../../../../shared/types"
+import { JobThread, JobIteration } from "../../../shared/types"
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-900 text-yellow-300",

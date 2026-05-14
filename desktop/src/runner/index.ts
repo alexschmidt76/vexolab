@@ -2,8 +2,8 @@ import { runStandard } from "./standard"
 import { runClaudeCli, detectClaudeCli } from "./claudeCli"
 import axios from "axios"
 
-const SERVER_URL = process.env.ORVITLAB_SERVER_URL || "https://api.orvitlab.com"
-const TOKEN = process.env.ORVITLAB_TOKEN || ""
+const SERVER_URL = process.env.VEXOLAB_SERVER_URL || "https://api.vexolab.com"
+const TOKEN = process.env.VEXOLAB_TOKEN || ""
 const headers = { Authorization: `Bearer ${TOKEN}` }
 
 export type RunnerMode = "auto" | "standard" | "claude-cli"

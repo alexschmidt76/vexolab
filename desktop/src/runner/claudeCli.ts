@@ -3,8 +3,6 @@ import { promisify } from "util"
 import path from "path"
 import fs from "fs/promises"
 import os from "os"
-import { Octokit } from "@octokit/rest"
-
 const execAsync = promisify(exec)
 
 // check if the claude binary is on PATH
@@ -24,7 +22,7 @@ export async function runClaudeCli(
   if (!token) throw new Error("GITHUB_TOKEN not set")
 
   const [owner, repoName] = job.repo.split("/")
-  const tempDir = path.join(os.tmpdir(), `orvitlab-${job.id}`)
+  const tempDir = path.join(os.tmpdir(), `vexolab-${job.id}`)
   await fs.mkdir(tempDir, { recursive: true })
 
   try {
@@ -33,7 +31,7 @@ export async function runClaudeCli(
       `git clone https://x-access-token:${token}@github.com/${job.repo}.git "${tempDir}"`
     )
 
-    const branchName = `orvitlab/${job.id.slice(0, 8)}`
+    const branchName = `vexolab/${job.id.slice(0, 8)}`
     await execAsync(`git checkout -b ${branchName}`, { cwd: tempDir })
 
     // run claude code non-interactively
@@ -46,17 +44,18 @@ export async function runClaudeCli(
     if (!diffStat.trim()) throw new Error("Claude CLI made no changes")
 
     await execAsync(
-      `git commit -m "OrvitLab: ${job.command.slice(0, 72)}"`,
+      `git commit -m "VexoLab: ${job.command.slice(0, 72)}"`,
       { cwd: tempDir }
     )
     await execAsync(`git push origin ${branchName}`, { cwd: tempDir })
 
-    const octokit = new Octokit({ auth: token })
+    const { Octokit } = await import("@octokit/rest")
+  const octokit = new Octokit({ auth: token })
     const { data: pr } = await octokit.pulls.create({
       owner,
       repo: repoName,
       title: job.command.slice(0, 72),
-      body: `Created by OrvitLab (Claude CLI runner)\n\nCommand: "${job.command}"`,
+      body: `Created by VexoLab (Claude CLI runner)\n\nCommand: "${job.command}"`,
       head: branchName,
       base: "main",
     })

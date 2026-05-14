@@ -19,7 +19,7 @@ export default {
   adminSecret: process.env.ADMIN_SECRET!,
   cliVersion: process.env.CLI_VERSION || "1.0.0",
   runnerPollInterval: parseInt(process.env.RUNNER_POLL_INTERVAL_MS || "5000"),
-  sandboxDir: process.env.SANDBOX_DIR || "/tmp/orvitlab-sandbox",
+  sandboxDir: process.env.SANDBOX_DIR || "/tmp/vexolab-sandbox",
   schedulerPollInterval: parseInt(process.env.SCHEDULER_POLL_INTERVAL_MS || "60000"),
   publicApiRateLimitPerMinute: parseInt(process.env.PUBLIC_API_RATE_LIMIT_PER_MINUTE || "60"),
   port: process.env.PORT || 3000,

@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store"
 
-const TOKEN_KEY = "orvitlab_jwt"
+const TOKEN_KEY = "vexolab_jwt"
 
 export async function saveToken(token: string): Promise<void> {
   await SecureStore.setItemAsync(TOKEN_KEY, token)

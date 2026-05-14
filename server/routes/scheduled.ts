@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express"
 import { requireAuth } from "../auth/middleware"
 import { db } from "../db/index"
 import { describeSchedule, getNextRunTime } from "../jobs/scheduler"
-import { parseExpression } from "cron-parser"
+import CronExpressionParser from "cron-parser"
 
 const router = Router()
 
@@ -27,7 +27,7 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
   let humanReadable: string
   let nextRunAt: Date
   try {
-    parseExpression(cronExpression)
+    CronExpressionParser.parse(cronExpression)
     humanReadable = describeSchedule(cronExpression)
     nextRunAt = getNextRunTime(cronExpression)
   } catch {

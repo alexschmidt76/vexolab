@@ -9,7 +9,7 @@ export default function AuthScreen() {
 
   return (
     <View className="flex-1 bg-brand-bg items-center justify-center p-6">
-      <Text className="text-brand-text text-4xl font-bold mb-2">OrvitLab</Text>
+      <Text className="text-brand-text text-4xl font-bold mb-2">VexoLab</Text>
       <Text className="text-brand-muted text-sm mb-12">Command from anywhere</Text>
 
       <TouchableOpacity

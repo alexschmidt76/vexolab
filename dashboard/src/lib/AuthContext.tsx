@@ -14,20 +14,20 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("orvitlab_token"))
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("vexolab_token"))
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function init() {
-      const stored = localStorage.getItem("orvitlab_token")
+      const stored = localStorage.getItem("vexolab_token")
       if (!stored) { setLoading(false); return }
       try {
         const { data } = await api(stored).get("/users/me")
         setToken(stored)
         setUser(data)
       } catch {
-        localStorage.removeItem("orvitlab_token")
+        localStorage.removeItem("vexolab_token")
         setToken(null)
       } finally {
         setLoading(false)
@@ -38,13 +38,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(jwt: string) {
     const { data } = await api(jwt).get("/users/me")
-    localStorage.setItem("orvitlab_token", jwt)
+    localStorage.setItem("vexolab_token", jwt)
     setToken(jwt)
     setUser(data)
   }
 
   function logout() {
-    localStorage.removeItem("orvitlab_token")
+    localStorage.removeItem("vexolab_token")
     setToken(null)
     setUser(null)
   }

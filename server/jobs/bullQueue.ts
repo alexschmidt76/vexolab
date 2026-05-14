@@ -13,7 +13,7 @@ import { Provider } from "../../shared/types"
 const connection = new IORedis(config.redisUrl, { maxRetriesPerRequest: null })
 connection.on("error", (err) => console.error("Redis connection error:", err.message))
 
-export const jobQueue = new Queue("orvitlab-jobs", { connection })
+export const jobQueue = new Queue("vexolab-jobs", { connection })
 jobQueue.on("error", (err) => console.error("BullMQ queue error:", err.message))
 
 async function dbUpdateJob(id: string, updates: Record<string, any>) {
@@ -29,7 +29,7 @@ async function processJob(bull: BullJob) {
   await dbUpdateJob(jobId, { status: "running" })
 
   try {
-    // Fetch repo config (.orvitlab.md) and run agent
+    // Fetch repo config (.vexolab.md) and run agent
     const repoConfig = await getRepoConfig(repo, githubToken)
     const raw = await runAgent(command, provider as Provider, apiKey, model, repoConfig)
     const result = JSON.parse(raw)
@@ -46,10 +46,10 @@ async function processJob(bull: BullJob) {
     // Create branch and commit files
     await createBranch(repo, result.branch, githubToken)
     for (const file of result.files) {
-      await commitFile(repo, result.branch, file.path, file.content, `OrvitLab: ${result.summary}`, githubToken)
+      await commitFile(repo, result.branch, file.path, file.content, `VexoLab: ${result.summary}`, githubToken)
     }
 
-    const prUrl = await openPR(repo, result.branch, result.summary, `Created by OrvitLab\n\nCommand: "${command}"`, githubToken)
+    const prUrl = await openPR(repo, result.branch, result.summary, `Created by VexoLab\n\nCommand: "${command}"`, githubToken)
 
     // Create thread record for this job
     const { data: thread } = await db
@@ -103,7 +103,7 @@ async function processRepair(bull: BullJob) {
     for (const file of result.files) {
       await commitFile(
         repo, branch, file.path, file.content,
-        `OrvitLab repair: ${result.summary}`,
+        `VexoLab repair: ${result.summary}`,
         githubToken
       )
     }
@@ -130,7 +130,7 @@ async function processRepair(bull: BullJob) {
 }
 
 export function startWorker(): Worker {
-  const worker = new Worker("orvitlab-jobs", processJob, { connection })
+  const worker = new Worker("vexolab-jobs", processJob, { connection })
   worker.on("error", (err) => console.error("BullMQ worker error:", err.message))
   return worker
 }

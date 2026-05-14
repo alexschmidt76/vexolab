@@ -7,8 +7,8 @@ import dotenv from "dotenv"
 
 dotenv.config()
 
-const API_URL = process.env.ORVITLAB_SERVER_URL || "https://api.orvitlab.com"
-const TOKEN = process.env.ORVITLAB_TOKEN
+const API_URL = process.env.VEXOLAB_SERVER_URL || "https://api.vexolab.com"
+const TOKEN = process.env.VEXOLAB_TOKEN
 
 function authHeaders() {
   return { Authorization: `Bearer ${TOKEN}` }
@@ -16,8 +16,8 @@ function authHeaders() {
 
 function requireToken() {
   if (!TOKEN) {
-    console.error(chalk.red("Error: ORVITLAB_TOKEN env var not set"))
-    console.log(chalk.dim("Log in at your server /auth/github, then set ORVITLAB_TOKEN=<jwt>"))
+    console.error(chalk.red("Error: VEXOLAB_TOKEN env var not set"))
+    console.log(chalk.dim("Log in at your server /auth/github, then set VEXOLAB_TOKEN=<jwt>"))
     process.exit(1)
   }
 }
@@ -25,8 +25,8 @@ function requireToken() {
 const program = new Command()
 
 program
-  .name("orvitlab")
-  .description("OrvitLab CLI — run AI dev agent jobs from your terminal")
+  .name("vexolab")
+  .description("VexoLab CLI — run AI dev agent jobs from your terminal")
   .version(process.env.CLI_VERSION || "1.0.0")
 
 program
@@ -72,7 +72,7 @@ program
           process.exit(1)
         }
       } else {
-        console.log(chalk.dim(`\nCheck status: orvitlab status ${job.id}`))
+        console.log(chalk.dim(`\nCheck status: vexolab status ${job.id}`))
       }
     } catch (err: any) {
       spinner.fail(chalk.red(err.response?.data?.error || err.message))

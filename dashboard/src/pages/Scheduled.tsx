@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { api } from "../api"
 import { useAuth } from "../lib/AuthContext"
-import { ScheduledJob } from "../../../../shared/types"
+import { ScheduledJob } from "../../../shared/types"
 
 export default function Scheduled() {
   const { token } = useAuth()

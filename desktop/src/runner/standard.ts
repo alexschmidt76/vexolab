@@ -1,5 +1,4 @@
 import Anthropic from "@anthropic-ai/sdk"
-import { Octokit } from "@octokit/rest"
 
 export async function runStandard(
   job: any
@@ -34,6 +33,7 @@ async function pushToGitHub(
   const token = process.env.GITHUB_TOKEN
   if (!token) throw new Error("GITHUB_TOKEN not set")
 
+  const { Octokit } = await import("@octokit/rest")
   const octokit = new Octokit({ auth: token })
   const [owner, repoName] = repo.split("/")
 
@@ -51,7 +51,7 @@ async function pushToGitHub(
       repo: repoName,
       path: file.path,
       branch: result.branch,
-      message: `OrvitLab: ${result.summary}`,
+      message: `VexoLab: ${result.summary}`,
       content: Buffer.from(file.content).toString("base64"),
     })
   }
@@ -60,7 +60,7 @@ async function pushToGitHub(
     owner,
     repo: repoName,
     title: result.summary,
-    body: `Created by OrvitLab\n\nCommand: "${command}"`,
+    body: `Created by VexoLab\n\nCommand: "${command}"`,
     head: result.branch,
     base: "main",
   })

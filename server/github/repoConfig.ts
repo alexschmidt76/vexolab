@@ -5,7 +5,7 @@ export async function getRepoConfig(repo: string, githubToken: string): Promise<
   const [owner, repoName] = repo.split("/")
 
   try {
-    const { data } = await octokit.repos.getContent({ owner, repo: repoName, path: ".orvitlab.md" })
+    const { data } = await octokit.repos.getContent({ owner, repo: repoName, path: ".vexolab.md" })
     if (Array.isArray(data) || data.type !== "file") return null
     return Buffer.from(data.content, "base64").toString("utf-8")
   } catch {
