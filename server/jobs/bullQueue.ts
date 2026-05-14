@@ -130,7 +130,10 @@ async function processRepair(bull: BullJob) {
 }
 
 export function startWorker(): Worker {
-  const worker = new Worker("vexolab-jobs", processJob, { connection })
+  const worker = new Worker("vexolab-jobs", processJob, {
+    connection,
+    lockDuration: 10 * 60 * 1000, // 10 minutes — AI jobs can be slow
+  })
   worker.on("error", (err) => console.error("BullMQ worker error:", err.message))
   return worker
 }

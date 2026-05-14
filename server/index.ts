@@ -22,6 +22,7 @@ import publicApiRouter from "./routes/publicApi"
 import authRouter from "./auth/github"
 import config from "./config/index"
 import { startWorker } from "./jobs/bullQueue"
+import { db } from "./db/index"
 import { startScheduler } from "./jobs/scheduler"
 
 console.log("=== SERVER STARTING ===")
@@ -76,7 +77,13 @@ app.get("/billing/cancel", (_, res) => res.send("<h2>Upgrade cancelled.</h2>"))
 try {
   const worker = startWorker()
   worker.on("completed", (job) => console.log(`Cloud job ${job.id} completed`))
-  worker.on("failed", (job, err) => console.error(`Cloud job ${job?.id} failed:`, err.message))
+  worker.on("failed", async (job, err) => {
+    console.error(`Cloud job ${job?.id} failed:`, err.message)
+    const jobId = job?.data?.jobId
+    if (jobId) {
+      await db.from("jobs").update({ status: "failed", error: err.message }).eq("id", jobId)
+    }
+  })
   worker.on("error", (err) => console.error("BullMQ worker error:", err.message))
 } catch (err: any) {
   console.error("BullMQ worker failed to start (Redis unavailable?):", err.message)
