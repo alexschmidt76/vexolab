@@ -2,23 +2,8 @@ import { useEffect, useRef, useState } from "react"
 import { api } from "../api"
 import { useAuth } from "../lib/AuthContext"
 
-import { Job, JobStatus, RunnerType, User, UserTier } from "../../../shared/types"
+import { Job, RunnerType } from "../../../shared/types"
 import { useNavigate } from "react-router-dom"
-
-/* type Job = {
-  id: string
-  command: string
-  repo: string
-  status: "pending" | "running" | "done" | "failed"
-  runner_type: string
-  branch: string | null
-  pr_url: string | null
-  error: string | null
-  tokens_used: number | null
-  provider: string | null
-  model: string | null
-  created_at: string
-} */
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-900 text-yellow-300",
@@ -161,7 +146,7 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="space-y-3">
-          {jobs.map((job) => (
+          {jobs.map((job: Job) => (
             <div
               key={job.id}
               className="bg-brand-surface border border-brand-border rounded-xl p-4"

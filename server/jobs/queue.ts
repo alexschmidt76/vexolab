@@ -1,6 +1,6 @@
 import { Job, RunnerType, UserTier, Provider, JobTrigger } from "../../shared/types"
 import { jobQueue } from "./bullQueue"
-import { db } from "../db/index"
+import { db, camel } from "../db/index"
 import config from "../config/index"
 
 // monthly prompt limits per tier
@@ -76,13 +76,13 @@ export async function addJob(
     })
   }
 
-  return job
+  return camel<Job>(job)!
 }
 
 // get a single job by id
 export async function getJob(id: string): Promise<Job | null> {
   const { data } = await db.from("jobs").select("*").eq("id", id).single()
-  return data
+  return camel<Job>(data)
 }
 
 // get the oldest pending local job for a user
@@ -96,7 +96,7 @@ export async function getNextLocalJob(userId: string): Promise<Job | null> {
     .order("created_at", { ascending: true })
     .limit(1)
     .single()
-  return data || null
+  return camel<Job>(data)
 }
 
 // update a job's fields in the database
@@ -112,5 +112,5 @@ export async function getUserJobs(userId: string): Promise<Job[]> {
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(50)
-  return data || []
+  return (data || []).map(j => camel<Job>(j)!)
 }
