@@ -176,16 +176,18 @@ export default function Dashboard() {
                 {job.tokensUsed != null && <span>{job.tokensUsed.toLocaleString()} tokens</span>}
                 {job.model && <span className="font-mono">{job.model}</span>}
               </div>
-              {job.prUrl && (
-                <a
-                  href={job.prUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-2 inline-block text-xs text-brand-accent hover:underline"
-                >
-                  View PR →
-                </a>
-              )}
+              <div className="mt-2 flex flex-wrap gap-3">
+                {job.prUrl && (
+                  <a href={job.prUrl} target="_blank" rel="noreferrer" className="text-xs text-brand-accent hover:underline">
+                    View PR →
+                  </a>
+                )}
+                {job.threadId && (
+                  <a href={`/threads/${job.threadId}`} className="text-xs text-brand-muted hover:text-brand-text">
+                    View thread →
+                  </a>
+                )}
+              </div>
               {job.error && (
                 <p className="mt-2 text-xs text-red-400 bg-red-950 rounded p-2">{job.error}</p>
               )}

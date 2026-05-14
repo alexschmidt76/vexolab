@@ -30,6 +30,8 @@ export default function SettingsScreen() {
   const [openaiKey, setOpenaiKey] = useState("")
   const [geminiKey, setGeminiKey] = useState("")
   const [spendLimit, setSpendLimit] = useState(user?.spendLimitUsd?.toString() ?? "")
+  const [slackWebhook, setSlackWebhook] = useState("")
+  const [discordWebhook, setDiscordWebhook] = useState("")
   const [provider, setProvider] = useState<Provider>(user?.provider ?? "anthropic")
   const [model, setModel] = useState<string>(user?.model ?? PROVIDER_MODELS["anthropic"][1].id)
   const [saved, setSaved] = useState(false)
@@ -83,6 +85,22 @@ export default function SettingsScreen() {
     setOpenaiKey("")
     setGeminiKey("")
     await refreshUser()
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function saveNotifications() {
+    if (!token) return
+    await axios.patch(
+      `${SERVER_URL}/users/me/notifications`,
+      {
+        slackWebhookUrl: slackWebhook.trim() || null,
+        discordWebhookUrl: discordWebhook.trim() || null,
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    setSlackWebhook("")
+    setDiscordWebhook("")
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -220,6 +238,41 @@ export default function SettingsScreen() {
           onPress={saveSettings}
         >
           <Text className="text-white font-semibold">{saved ? "Saved ✓" : "Save Settings"}</Text>
+        </TouchableOpacity>
+
+        {/* Notifications */}
+        <Text className="text-brand-muted text-xs mb-2 uppercase tracking-wider">Notifications</Text>
+        <View className="bg-brand-surface rounded-xl mb-1 overflow-hidden">
+          <View className="px-4 py-3 border-b border-zinc-800">
+            <Text className="text-brand-muted text-xs mb-1">Slack Webhook URL</Text>
+            <TextInput
+              className="text-brand-text text-sm"
+              placeholder="https://hooks.slack.com/services/..."
+              placeholderTextColor="#71717a"
+              value={slackWebhook}
+              onChangeText={setSlackWebhook}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+          <View className="px-4 py-3">
+            <Text className="text-brand-muted text-xs mb-1">Discord Webhook URL</Text>
+            <TextInput
+              className="text-brand-text text-sm"
+              placeholder="https://discord.com/api/webhooks/..."
+              placeholderTextColor="#71717a"
+              value={discordWebhook}
+              onChangeText={setDiscordWebhook}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+        </View>
+        <TouchableOpacity
+          className="bg-zinc-700 p-3 rounded-xl items-center mb-6"
+          onPress={saveNotifications}
+        >
+          <Text className="text-brand-text text-sm font-semibold">Save Notifications</Text>
         </TouchableOpacity>
 
         {/* Runner */}

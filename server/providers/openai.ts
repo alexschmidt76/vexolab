@@ -6,17 +6,11 @@ export type AgentResult = { text: string; tokensUsed: number }
 export async function runAgent(
   command: string,
   apiKey: string,
-  model: string = "gpt-4o-mini"
+  model: string = "gpt-4o-mini",
+  systemSuffix?: string
 ): Promise<AgentResult> {
   const client = new OpenAI({ apiKey })
-
-  const response = await client.chat.completions.create({
-    model,
-    max_tokens: 1024,
-    messages: [
-      {
-        role: "system",
-        content: `You are an AI developer agent. When given a command:
+  const baseSystem = `You are an AI developer agent. When given a command:
 1. Describe what files to create or modify
 2. Output the actual code changes
 3. Suggest a git branch name (kebab-case, no spaces)
@@ -28,7 +22,15 @@ Respond ONLY in this exact JSON format with no extra text:
   "files": [
     { "path": "src/components/Example.tsx", "content": "..." }
   ]
-}`,
+}`
+
+  const response = await client.chat.completions.create({
+    model,
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "system",
+        content: systemSuffix ? `${baseSystem}\n\n## Repo-specific instructions:\n${systemSuffix}` : baseSystem,
       },
       { role: "user", content: command },
     ],

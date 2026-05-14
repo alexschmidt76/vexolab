@@ -19,6 +19,8 @@ export default function Settings() {
   const [openaiKey, setOpenaiKey] = useState("")
   const [geminiKey, setGeminiKey] = useState("")
   const [spendLimit, setSpendLimit] = useState(user?.spendLimitUsd?.toString() ?? "")
+  const [slackWebhook, setSlackWebhook] = useState("")
+  const [discordWebhook, setDiscordWebhook] = useState("")
   const [saved, setSaved] = useState(false)
   const [runnerToken, setRunnerToken] = useState("")
 
@@ -53,6 +55,18 @@ export default function Settings() {
     setOpenaiKey("")
     setGeminiKey("")
     await refreshUser()
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function saveNotifications() {
+    if (!token) return
+    await api(token).patch("/users/me/notifications", {
+      slackWebhookUrl: slackWebhook.trim() || null,
+      discordWebhookUrl: discordWebhook.trim() || null,
+    })
+    setSlackWebhook("")
+    setDiscordWebhook("")
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -146,6 +160,40 @@ export default function Settings() {
       >
         {saved ? "Saved ✓" : "Save Settings"}
       </button>
+
+      {/* Notifications */}
+      <section>
+        <p className={label}>Notifications</p>
+        <p className="text-xs text-brand-muted mb-3">Leave blank to keep existing webhook. Set to empty to remove.</p>
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs text-brand-muted mb-1">Slack Incoming Webhook URL</p>
+            <input
+              type="url"
+              className={input}
+              placeholder="https://hooks.slack.com/services/..."
+              value={slackWebhook}
+              onChange={(e) => setSlackWebhook(e.target.value)}
+            />
+          </div>
+          <div>
+            <p className="text-xs text-brand-muted mb-1">Discord Webhook URL</p>
+            <input
+              type="url"
+              className={input}
+              placeholder="https://discord.com/api/webhooks/..."
+              value={discordWebhook}
+              onChange={(e) => setDiscordWebhook(e.target.value)}
+            />
+          </div>
+        </div>
+        <button
+          className="mt-3 bg-brand-surface border border-brand-border text-brand-text text-sm font-semibold px-4 py-2 rounded-lg hover:border-brand-accent transition-colors"
+          onClick={saveNotifications}
+        >
+          Save Notifications
+        </button>
+      </section>
 
       {/* Runner token */}
       <section>

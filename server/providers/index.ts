@@ -14,34 +14,36 @@ export async function runAgent(
   command: string,
   provider: Provider,
   apiKey: string,
-  model?: string
+  model?: string,
+  repoConfig?: string | null
 ): Promise<string> {
   const resolvedModel = model || getDefaultModel(provider)
+  const systemSuffix = repoConfig || undefined
   let text: string
   let tokensUsed: number
 
   switch (provider) {
     case "openai": {
-      const result = await openaiAgent(command, apiKey, resolvedModel)
+      const result = await openaiAgent(command, apiKey, resolvedModel, systemSuffix)
       text = result.text
       tokensUsed = result.tokensUsed
       break
     }
     case "gemini": {
-      const result = await geminiAgent(command, apiKey, resolvedModel)
+      const result = await geminiAgent(command, apiKey, resolvedModel, systemSuffix)
       text = result.text
       tokensUsed = result.tokensUsed
       break
     }
     case "ollama": {
-      const result = await ollamaAgent(command, resolvedModel)
+      const result = await ollamaAgent(command, resolvedModel, systemSuffix)
       text = result.text
       tokensUsed = result.tokensUsed
       break
     }
     case "anthropic":
     default: {
-      const result = await anthropicAgent(command, apiKey, resolvedModel)
+      const result = await anthropicAgent(command, apiKey, resolvedModel, systemSuffix)
       text = result.text
       tokensUsed = result.tokensUsed
       break

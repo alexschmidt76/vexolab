@@ -2,9 +2,9 @@ export type JobStatus = "pending" | "running" | "done" | "failed"
 export type RunnerType = "local" | "cloud"
 export type RunnerMode = "auto" | "standard" | "claude-cli"
 export type UserTier = "free" | "starter" | "pro" | "pro_api"
-export type JobTrigger = "manual" | "webhook" | "cli"
-
+export type JobTrigger = "manual" | "webhook" | "cli" | "scheduled"
 export type Provider = "anthropic" | "openai" | "gemini" | "ollama"
+export type NotificationChannel = "push" | "slack" | "discord"
 
 export const PROVIDER_MODELS: Record<Provider, { id: string; label: string; fast?: boolean }[]> = {
   anthropic: [
@@ -30,9 +30,39 @@ export const PROVIDER_MODELS: Record<Provider, { id: string; label: string; fast
   ],
 }
 
+export type JobThread = {
+  id: string
+  userId: string
+  repo: string
+  branch: string
+  originalCommand: string
+  status: "open" | "resolved" | "abandoned"
+  iterationCount: number
+  prUrl: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type JobIteration = {
+  id: string
+  threadId: string
+  jobId: string | null
+  iterationNumber: number
+  command: string
+  errorReport: string | null
+  selfReview: string | null
+  buildOutput: string | null
+  status: JobStatus
+  tokensUsed: number | null
+  provider: Provider
+  model: string
+  createdAt: Date
+}
+
 export type Job = {
   id: string
   userId: string
+  threadId: string | null
   command: string
   repo: string
   status: JobStatus
@@ -44,16 +74,10 @@ export type Job = {
   tokensUsed: number | null
   provider: Provider
   model: string
+  selfReview: string | null
+  buildOutput: string | null
   createdAt: Date
   updatedAt: Date
-}
-
-export type TokenUsage = {
-  id: string
-  userId: string
-  jobId: string
-  tokensUsed: number
-  createdAt: Date
 }
 
 export type User = {
@@ -62,19 +86,62 @@ export type User = {
   githubUsername: string
   githubToken: string
   tier: UserTier
+  freePromptsRemaining: number
   provider: Provider
   model: string
   apiKey: string | null
   openaiApiKey: string | null
   geminiApiKey: string | null
+  stripeCustomerId: string | null
+  expoPushToken: string | null
+  slackWebhookUrl: string | null
+  discordWebhookUrl: string | null
   spendLimitUsd: number | null
   hasAnthropicKey: boolean
   hasOpenAiKey: boolean
   hasGeminiKey: boolean
-  stripeCustomerId: string | null
-  expoPushToken: string | null
   jobsThisMonth: number
   tokensThisMonth: number
+  createdAt: Date
+}
+
+export type SpendLimitStatus = {
+  limitUsd: number | null
+  spentUsd: number
+  remainingUsd: number | null
+  isNearLimit: boolean
+  isAtLimit: boolean
+}
+
+export type ScheduledJob = {
+  id: string
+  userId: string
+  command: string
+  repo: string
+  cronExpression: string
+  humanReadable: string
+  provider: Provider
+  model: string
+  enabled: boolean
+  lastRunAt: Date | null
+  nextRunAt: Date
+  createdAt: Date
+}
+
+export type PublicApiKey = {
+  id: string
+  userId: string
+  name: string
+  keyHash: string
+  lastUsedAt: Date | null
+  createdAt: Date
+}
+
+export type TokenUsage = {
+  id: string
+  userId: string
+  jobId: string
+  tokensUsed: number
   createdAt: Date
 }
 

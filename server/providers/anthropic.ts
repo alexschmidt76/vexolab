@@ -7,13 +7,11 @@ export type AgentResult = { text: string; tokensUsed: number }
 export async function runAgent(
   command: string,
   apiKey?: string,
-  model: string = "claude-sonnet-4-6"
+  model: string = "claude-sonnet-4-6",
+  systemSuffix?: string
 ): Promise<AgentResult> {
   const client = new Anthropic({ apiKey: apiKey || config.anthropicKey })
-  const response = await client.messages.create({
-    model,
-    max_tokens: 8096,
-    system: `You are an AI developer agent. When given a command:
+  const baseSystem = `You are an AI developer agent. When given a command:
 1. Describe what files to create or modify
 2. Output the actual code changes
 3. Suggest a git branch name (kebab-case, no spaces)
@@ -25,7 +23,11 @@ Respond ONLY in this exact JSON format with no extra text:
   "files": [
     { "path": "src/components/Example.tsx", "content": "..." }
   ]
-}`,
+}`
+  const response = await client.messages.create({
+    model,
+    max_tokens: 8096,
+    system: systemSuffix ? `${baseSystem}\n\n## Repo-specific instructions:\n${systemSuffix}` : baseSystem,
     messages: [{ role: "user", content: command }],
   })
 

@@ -84,4 +84,19 @@ router.patch("/me/spend-limit", requireAuth, async (req: Request, res: Response)
   res.json({ ok: true, limitUsd })
 })
 
+router.patch("/me/notifications", requireAuth, async (req: Request, res: Response) => {
+  const user = res.locals.user
+  const { slackWebhookUrl, discordWebhookUrl } = req.body
+
+  const updates: Record<string, any> = {}
+  if (slackWebhookUrl !== undefined) updates.slack_webhook_url = slackWebhookUrl
+  if (discordWebhookUrl !== undefined) updates.discord_webhook_url = discordWebhookUrl
+
+  if (Object.keys(updates).length > 0) {
+    await db.from("users").update(updates).eq("id", user.id)
+  }
+
+  res.json({ ok: true })
+})
+
 export default router

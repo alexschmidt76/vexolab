@@ -4,6 +4,8 @@ import Settings from "./pages/Settings"
 import Upgrade from "./pages/Upgrade"
 import Admin from "./pages/Admin"
 import Login from "./pages/Login"
+import Thread from "./pages/Thread"
+import Scheduled from "./pages/Scheduled"
 import { AuthProvider, useAuth } from "./lib/AuthContext"
 
 function Nav() {
@@ -18,6 +20,7 @@ function Nav() {
     <nav className="border-b border-brand-border px-6 py-3 flex items-center gap-2">
       <span className="text-brand-text font-bold mr-6">OrvitLab</span>
       <NavLink to="/dashboard" className={linkClass}>Dashboard</NavLink>
+      <NavLink to="/scheduled" className={linkClass}>Scheduled</NavLink>
       <NavLink to="/settings" className={linkClass}>Settings</NavLink>
       <NavLink to="/upgrade" className={linkClass}>Upgrade</NavLink>
       <NavLink to="/admin" className={linkClass}>Admin</NavLink>
@@ -65,6 +68,8 @@ function AppContent() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/login" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/threads/:id" element={<Thread />} />
+          <Route path="/scheduled" element={<Scheduled />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/upgrade" element={<Upgrade />} />
           <Route path="/admin" element={<Admin />} />

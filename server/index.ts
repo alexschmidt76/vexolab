@@ -15,9 +15,14 @@ import runnerRouter from "./routes/runner"
 import usersRouter from "./routes/users"
 import webhooksRouter from "./routes/webhooks"
 import adminRouter from "./routes/admin"
+import threadsRouter from "./routes/threads"
+import scheduledRouter from "./routes/scheduled"
+import apiKeysRouter from "./routes/apiKeys"
+import publicApiRouter from "./routes/publicApi"
 import authRouter from "./auth/github"
 import config from "./config/index"
 import { startWorker } from "./jobs/bullQueue"
+import { startScheduler } from "./jobs/scheduler"
 
 console.log("=== SERVER STARTING ===")
 console.log("PORT:", process.env.PORT || "(not set, using 3000)")
@@ -57,6 +62,10 @@ app.use("/runner", runnerRouter)
 app.use("/users", usersRouter)
 app.use("/webhooks", webhooksRouter)
 app.use("/admin", adminRouter)
+app.use("/threads", threadsRouter)
+app.use("/scheduled", scheduledRouter)
+app.use("/api-keys", apiKeysRouter)
+app.use("/api/v1", publicApiRouter)
 
 app.get("/", (_, res) => res.json({ ok: true }))
 app.get("/health", (_, res) => res.json({ status: "ok", app: "OrvitLab", version: config.cliVersion }))
@@ -72,6 +81,8 @@ try {
 } catch (err: any) {
   console.error("BullMQ worker failed to start (Redis unavailable?):", err.message)
 }
+
+startScheduler()
 
 const server = app.listen(config.port, () => {
   console.log(`OrvitLab server running on port ${config.port}`)
